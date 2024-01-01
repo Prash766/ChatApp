@@ -9,7 +9,8 @@ export enum Status {
 export interface FriendRequestType{
     senderId : ObjectId,
     receiverId : ObjectId,
-    status  : Status
+    status  : Status,
+    cooldown : Date
 }
 
 const FriendRequestSchema = new Schema<FriendRequestType>({
@@ -27,6 +28,11 @@ const FriendRequestSchema = new Schema<FriendRequestType>({
     type:String,
     enum : Object.values(Status),
     default: Status.PENDING 
+ },
+ cooldown:{
+   type:Date,
+   default: null
+
  }
 }, {timestamps:true})
 
