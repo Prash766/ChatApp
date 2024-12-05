@@ -4,9 +4,8 @@ import { Navigate, Outlet } from "react-router-dom"
 
 const ProtectedRoutes = () => {
     const {isAuthenticated  , authenticateUser} = useAuthStore()
-
     useEffect(()=>{
-     authenticateUser
+     authenticateUser()
     },[])
     return isAuthenticated ?<Outlet/> : <Navigate to= '/login' replace={true}/>
 }
