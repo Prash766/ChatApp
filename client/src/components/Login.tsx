@@ -1,16 +1,31 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, LogIn } from 'lucide-react';
+import { Mail, Lock, LogIn, Loader } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const {isDarkTheme} = useTheme()
+  const navigate= useNavigate()
+  const {isLoggingIn , loginUser} = useAuthStore()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
+    const data = {
+      email , 
+      password
+    }
+   const res = await loginUser(data)
+
+    if(res.status===200){
+      toast.success("Login Successfull")
+      navigate('/chat')
+    }
+
   };
 
   return (
@@ -98,7 +113,13 @@ export const Login = () => {
           type="submit"
           className="w-full py-3 px-4 rounded-lg bg-blue-500 text-white font-medium hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
-          Sign in
+          {
+            isLoggingIn ?    <div className="flex items-center justify-center space-x-2">
+            <Loader className="animate-spin" />
+            <span>Signing In ....</span>
+          </div>
+       : "Sign In"
+          }
         </motion.button>
       </form>
 

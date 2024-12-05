@@ -2,10 +2,17 @@ import { motion } from 'framer-motion';
 import { MessageCircle, Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 
 export const Navbar = () => {
   const {isDarkTheme , setTheme} = useTheme()
-  const {isAuthenticated} = useAuthStore()
+  const { authenticateUser, isAuthenticated} = useAuthStore()
+  const navigate = useNavigate()
+
+  useEffect(()=>{
+   authenticateUser()
+  },[])  
 
   return (
     <motion.nav
@@ -24,7 +31,8 @@ export const Navbar = () => {
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-2"
+onClick={()=>navigate('/')}
+              className="cursor-pointer flex items-center gap-2"
             >
               <MessageCircle className="w-8 h-8 text-blue-500" />
               <span className={`text-xl font-bold ${
@@ -50,7 +58,6 @@ export const Navbar = () => {
                 <Moon className="w-5 h-5 text-gray-600" />
               )}
             </motion.button>
-
             {isAuthenticated ? (
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -64,6 +71,7 @@ export const Navbar = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={()=> navigate('/login')}
                   className={`px-4 py-2 rounded-full ${
                     isDarkTheme
                       ? 'text-gray-300 hover:text-white'
@@ -75,6 +83,7 @@ export const Navbar = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={()=>navigate('/signup')}
                   className="px-4 py-2 rounded-full bg-blue-500 text-white font-medium hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
                   Sign Up
