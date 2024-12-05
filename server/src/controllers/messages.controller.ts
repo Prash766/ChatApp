@@ -1,6 +1,6 @@
 import { UploadApiResponse } from "cloudinary";
 import { Message } from "../models/message.model";
-import { User } from "../models/user. model";
+import { User } from "../models/user.model";
 import asyncHandler from "../utils/asyncHandler";
 import { uploadCloudinary } from "../utils/cloudinary";
 

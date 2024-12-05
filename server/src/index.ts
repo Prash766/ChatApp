@@ -4,17 +4,25 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import connectDB from './db/db';
 import cookieParser from 'cookie-parser'
+import {v2 as cloudinary} from 'cloudinary'
 
+connectDB().catch((error)=>{
+  console.log("Database connection error",error )
+})
+cloudinary.config({ 
+  cloud_name: process.env.CLOUDINARY_NAME, 
+  api_key: process.env.CLOUDINARY_API_KEY, 
+  api_secret: process.env.CLOUDINARY_SECRET_KEY
+});
 const app = express();
 app.use(cors({
-  origin: '*'
+  origin: ['http://localhost:5173'],
+  credentials:true
 }));
 app.use(express.json())
 app.use(cookieParser())
 const server = http.createServer(app);
-connectDB().catch((error)=>{
-  console.log("Database connection error",error )
-})
+
 
 const io = new Server(server, {
   cors: {

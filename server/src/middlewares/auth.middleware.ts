@@ -3,6 +3,8 @@ import asyncHandler from "../utils/asyncHandler";
 import jwt from 'jsonwebtoken'
 const verifyJWT = asyncHandler(async(req , res , next)=>{
     const token = req.cookies['auth-token']
+    console.log("COOKIES",req.cookies)
+    console.log("TOKEN",token)
     if(!token){
         throw new ApiError("Token Not Found", 400)
     }
@@ -12,6 +14,7 @@ const verifyJWT = asyncHandler(async(req , res , next)=>{
             throw new ApiError("Invalid Token" , 400)
 
         }
+        next()
         
     } catch (error) {
         console.log(error)

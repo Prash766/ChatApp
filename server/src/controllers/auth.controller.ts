@@ -1,4 +1,4 @@
-import { User } from "../models/user. model";
+import { User } from "../models/user.model";
 import { FileSchema, loginSchema, SignUpSchema } from "../schema/schema";
 import ApiError from "../utils/ApiError";
 import asyncHandler from "../utils/asyncHandler";
@@ -27,17 +27,15 @@ const loginUser = asyncHandler(async (req, res, next) => {
       throw new ApiError("Invalid Credentials", 400);
     }
 
-    const isValid = user.isPasswordValid(password);
+    const isValid = await user.isPasswordValid(password);
 
     if (!isValid) {
       throw new ApiError("Invalid Credentials", 400);
     }
-    const token = user.generateToken({
+    const token = await user.generateToken({
         id: user._id
     })
     res.cookie("auth-token", token , options)
-
-
    return  res.status(200).json({ message: "Login successful" });
 
   } catch (error) {
@@ -51,10 +49,8 @@ const signUpUser = asyncHandler(async(req , res , next)=>{
      if(validate.error){
          throw new ApiError(validate.error.message,400)
      }
-     const fileValidate = FileSchema.safeParse(req.file)
-     if(fileValidate.error){
-         throw new ApiError(fileValidate.error.message, 400)
-     }
+     console.log("Req file",req.file)
+    
      const {fullName , email , password } = req.body
      let profilePic = ""
      const profileImage = req.file as Express.Multer.File || null
