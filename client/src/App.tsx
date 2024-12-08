@@ -3,8 +3,8 @@ import { AuthPage } from "./pages/AuthPage"
 import ProtectedRoutes from "./ProtectedRoutes"
 import LandingPage from "./pages/LandingPage"
 import { Navbar } from "./components/NavBar"
-import { ChatWindow } from "./components/ChatWindow"
 import ChatPage from "./pages/ChatPage"
+import { ProfilePage } from "./pages/ProfilePage"
 
 
 const App = () => {
@@ -18,7 +18,7 @@ const App = () => {
       <Route path='/' element={<LandingPage/>}/>
       <Route element={<ProtectedRoutes/>}>
       <Route path='/chat' element={<ChatPage/>}/>
-      {/* <Route path='/' element={}/> */}
+      <Route path='/profile' element={<ProfilePage/>}/>
       </Route>
 
     </Routes>

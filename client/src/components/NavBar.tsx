@@ -1,18 +1,29 @@
 import { motion } from 'framer-motion';
-import { MessageCircle, Moon, Sun } from 'lucide-react';
+import { LogOut, MessageCircle, Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import { toast } from 'sonner';
 
 export const Navbar = () => {
   const {isDarkTheme , setTheme} = useTheme()
-  const { authenticateUser, isAuthenticated} = useAuthStore()
+  const { authenticateUser, isAuthenticated, logOut} = useAuthStore()
   const navigate = useNavigate()
 
   useEffect(()=>{
    authenticateUser()
   },[])  
+
+ async function  handleLogoutClick(){
+  const res = await logOut()
+  if(res.status!==200){
+    toast.error(`${res.data.message || "Logout Failed"}`)
+
+  }
+  navigate('/', {replace:true})
+
+  }
 
   return (
     <motion.nav
@@ -59,13 +70,26 @@ onClick={()=>navigate('/')}
               )}
             </motion.button>
             {isAuthenticated ? (
+              <>
               <motion.button
+              onClick={()=> navigate('/chat')}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="px-4 py-2 rounded-full bg-blue-500 text-white font-medium hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
+                >
                 Open Chat
               </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                onClick= {handleLogoutClick}
+                whileTap={{ scale: 0.95 }}
+                className="px-4 py-2 rounded-full bg-blue-500 text-white font-medium hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+               <div className='flex'>
+               <LogOut/> <span className='ml-2'>Logout</span>
+                </div> 
+              </motion.button>
+                </>
             ) : (
               <>
                 <motion.button

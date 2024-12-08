@@ -1,4 +1,3 @@
-import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Login } from "@/components/Login";
 import { useLocation } from "react-router-dom";
@@ -9,7 +8,6 @@ export const AuthPage = () => {
   const location = useLocation();
   const {isDarkTheme} = useTheme()
 
-  // Determine whether to show Login or Signup based on the current route
   const isLogin = location.pathname === "/login";
 
   return (
