@@ -6,9 +6,10 @@ import { uploadCloudinary } from "../utils/cloudinary";
 
 
 const options ={
+    path: '/',
     httpOnly: true,
     secure: process.env.ENV === 'PRODUCTION' ? true : false,
-    maxAge : 1*24*60*60
+    maxAge : 1*24*60*60*1000
 }
 
 
@@ -102,6 +103,7 @@ const logOutUser = asyncHandler(async(req , res , next)=>{
 
 
 const updateProfile = asyncHandler(async(req , res , next)=>{
+    console.log("FILE" , req.file)
     const validateImage= FileSchema.safeParse(req.file)
     if(validateImage.error){
         throw new ApiError(validateImage.error.message , 400)
@@ -130,13 +132,29 @@ const checkUser = asyncHandler(async(req , res, next)=>{
     })
 })
 
+const userInfo = asyncHandler(async(req , res)=>{
+    console.log(req.user)
+    const id = req.user
+
+    try {
+        const user = await User.findById(id).select("-password")
+        return res.status(200).json({
+            user
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            message:"Internal Server Error!"
+        })
+        
+    }
+})
+
 export {
     loginUser,
     signUpUser,
     logOutUser,
     updateProfile,
-    checkUser
-
-
-
+    checkUser,
+    userInfo
 }
