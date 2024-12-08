@@ -44,7 +44,6 @@ UserSchema.pre("save", async function (next) {
 
 UserSchema.methods.generateToken = async function (payload: any): Promise<string> {
   const token = jwt.sign(payload, process.env.JWT_SECRET_KEY as string, {
-    expiresIn: process.env.JWT_EXPIRY,
   });
   return token;
 };
