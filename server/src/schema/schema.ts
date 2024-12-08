@@ -15,8 +15,9 @@ export const SignUpSchema = z.object({
 
 })
 
-export const FileSchema =  z.instanceof(File).refine(file => file.type.startsWith("image/"),{
-    message:"File must be an Image!"
-}).refine(file => file.size <=MAX_FILE_SIZE,{
-    message: `File size must be under ${MAX_FILE_SIZE / (1024 * 1024)} MB`,
-})
+export const FileSchema = z.object({
+    originalname: z.string().min(1, { message: "Original file name is required" }),
+    mimetype: z.string().min(1 , { message: "MIME type is required" }),
+    buffer: z.any(),
+  });
+  
