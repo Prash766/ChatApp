@@ -1,15 +1,17 @@
 import axiosClient from '@/axiosClient'
 import { toast } from 'sonner'
 import { create } from 'zustand'
+import { UserType } from './useAuthStore'
 
 interface ChatStoreType {
     messages: any[],
     users: any[],
-    selectedUser: any,
+    selectedUser: UserType | null,
     isUsersLoading: boolean,
     isMessagesLoading: boolean
-
-
+    getUsers :()=> Promise<any>
+    getMessages: (userId: string)=> Promise<any>
+    setSelectedUser : (selectedId :UserType) => void
 }
 
 export const useChatStore = create<ChatStoreType>((set) => ({
@@ -23,10 +25,12 @@ export const useChatStore = create<ChatStoreType>((set) => ({
         set({ isUsersLoading: true })
         try {
             const res = await axiosClient.get('/messages/users')
-            set({ users: res.data.users })
+
+            set({ users: res.data.filteredUsers })
 
         } catch (error: any) {
-            toast.error(error.response.data.message)
+            console.log(error)
+            toast.error(error.message)
         }
         finally {
             set({ isUsersLoading: false })
@@ -46,7 +50,8 @@ export const useChatStore = create<ChatStoreType>((set) => ({
         finally {
             set({ isMessagesLoading: false })
         }
-    }
+    },
+    setSelectedUser: (selectedUser)=> set({selectedUser : selectedUser}) 
 
 }
 )

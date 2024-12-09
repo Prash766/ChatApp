@@ -6,7 +6,7 @@ const ChatPagePlaceholder = () => {
   const { isDarkTheme } = useTheme();
 
   return (
-    <div className={`min-h-screen flex md:ml-52 items-center justify-center px-4 sm:px-6 lg:px-8  ${
+    <div className={`min-h-screen flex md:ml-96 items-center justify-center px-4 sm:px-6 lg:px-8  ${
       isDarkTheme ? "bg-gray-900" : "bg-gray-50"
     }`}>
       <div className="absolute inset-0 -z-10 overflow-hidden">

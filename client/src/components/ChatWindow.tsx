@@ -1,13 +1,22 @@
-import { useRef, useState } from 'react';
+import { useEffect,  useState } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Paperclip, Image, Video, Smile } from 'lucide-react';
+import { Send, Paperclip, Image, Video, Smile, X } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useDropzone } from 'react-dropzone';
+import ChatMessages from './ChatMessages';
+import { useChatStore } from '@/store/useStore';
 
 export const ChatWindow = () => {
   const [message, setMessage] = useState('');
-  const chatContainerRef = useRef<HTMLDivElement>(null);
   const { isDarkTheme } = useTheme();
+  const  {getMessages , isMessagesLoading, selectedUser , setSelectedUser} = useChatStore()
+  useEffect(()=>{
+    const fetchMessages=async ()=>{
+      await getMessages(selectedUser?._id as string)
+    }
+    fetchMessages()
+
+  },[selectedUser, getMessages])
 
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
@@ -22,6 +31,7 @@ export const ChatWindow = () => {
 
   return (
     <div className="flex-1 flex flex-col h-[calc(100vh-64px)] mt-16">
+
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -31,47 +41,22 @@ export const ChatWindow = () => {
       >
         <div className="flex items-center gap-3">
           <img 
-            src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop" 
+            src={`${selectedUser?.profilePic}`}
             className="w-10 h-10 rounded-full object-cover"
             alt="Chat avatar"
-          />
+            />
           <div>
             <h2 className={`font-medium transition-colors duration-300 ${isDarkTheme ? 'text-white' : 'text-gray-900'}`}>
-              Group Name
+              {selectedUser?.fullName}
             </h2>
             <p className="text-sm text-gray-500 transition-colors duration-300">3 members • 2 online</p>
           </div>
         </div>
       </motion.div>
+   
 
-      <div 
-        ref={chatContainerRef}
-        className={`flex-1 overflow-y-auto p-4 transition-colors duration-300 ${
-          isDarkTheme ? 'bg-gray-900' : 'bg-gray-50'
-        }`}
-      >
-        <div className="space-y-4">
-          <div className="flex items-end gap-2">
-            <img 
-              src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=40&h=40&fit=crop" 
-              className="w-8 h-8 rounded-full object-cover"
-              alt="User avatar"
-            />
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className={`max-w-[70%] rounded-lg p-3 transition-colors duration-300 ${
-                isDarkTheme 
-                  ? 'bg-gray-800 text-white' 
-                  : 'bg-white text-gray-900'
-              }`}
-            >
-              <p>Hey! How's it going?</p>
-              <span className="text-xs text-gray-500 mt-1 transition-colors duration-300">12:30 PM</span>
-            </motion.div>
-          </div>
-        </div>
-      </div>
+    
+        <ChatMessages/>
 
       <div 
         {...getRootProps()}

@@ -13,6 +13,7 @@ const ChatPage = () => {
           isDarkTheme ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
         }`}>
           <ChatSidebar />
+          {/* <ChatWindow /> */}
           {selectedUser?<ChatWindow /> : <ChatPagePlaceholder/>}
           
         </div>

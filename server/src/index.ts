@@ -51,7 +51,7 @@ import userRoutes from './routes/auth.routes'
 import messageRouter from './routes/messages.routes'
 import errorMiddleware from './middlewares/error.middleware';
 app.use('/api/v1/auth' , userRoutes)
-app.use('api/v1/messages', messageRouter)
+app.use('/api/v1/messages', messageRouter)
 
 
 
