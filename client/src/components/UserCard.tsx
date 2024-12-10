@@ -5,17 +5,22 @@ import { motion } from "framer-motion";
 const UserCard = ({chat}:any) => {
     const online= true
     const {isDarkTheme} = useTheme()
-    const {setSelectedUser} = useChatStore()
+    const {setSelectedUser , selectedUser} = useChatStore()
+    const isSelected = selectedUser?._id === chat._id
   return (
     <motion.div
-    onClick={()=> setSelectedUser(chat)}
-      whileHover={{ scale: 1.02 }}
-      className={`p-4 cursor-pointer border-b transition-all duration-300 ${
-        isDarkTheme
-          ? "border-gray-700 hover:bg-gray-800"
-          : "border-gray-100 hover:bg-gray-50"
-      }`}
-    >
+    onClick={() => setSelectedUser(chat)} 
+    whileHover={{ scale: 1.01 }}
+    className={`p-4 cursor-pointer border-b transition-all duration-300 ${
+      isDarkTheme
+        ? isSelected
+          ? "bg-gray-700 border-gray-500" 
+          : "border-gray-700 hover:bg-gray-800"
+        : isSelected
+        ? "bg-gray-200 border-gray-400" 
+        : "border-gray-100 hover:bg-gray-50"
+    }`}
+  >
       <div className="flex items-center gap-3">
         <div className="relative">
           <img
