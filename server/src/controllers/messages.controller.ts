@@ -3,6 +3,7 @@ import { Message } from "../models/message.model";
 import { User } from "../models/user.model";
 import asyncHandler from "../utils/asyncHandler";
 import { uploadCloudinary } from "../utils/cloudinary";
+import { getReceiverSocketId, io } from "../utils/socket";
 
 const getUserSidebar = asyncHandler(async(req , res, next)=>{
  try {
@@ -68,6 +69,13 @@ const sendMessages = asyncHandler(async (req, res) => {
         text: text || "", 
         image: uploadedImages.length > 0 ? uploadedImages : [], 
       });
+
+      const receiverSocketId = getReceiverSocketId(id)
+      console.log("recceiver socket id",receiverSocketId)
+      if(receiverSocketId){
+        io.to(receiverSocketId).emit("newMessage",message )
+        console.log("messagesent")
+      }
   
       return res.status(200).json({
         success: true,
