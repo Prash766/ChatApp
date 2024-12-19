@@ -3,10 +3,10 @@ import { useChatStore } from "@/store/useStore";
 import { motion } from "framer-motion";
 
 const UserCard = ({chat}:any) => {
-    const online= true
     const {isDarkTheme} = useTheme()
     const {setSelectedUser , selectedUser} = useChatStore()
     const isSelected = selectedUser?._id === chat._id
+    const {onlineUsers} = useChatStore()
   return (
     <motion.div
     onClick={() => setSelectedUser(chat)} 
@@ -28,9 +28,14 @@ const UserCard = ({chat}:any) => {
             className="w-12 h-12 rounded-full object-cover"
             alt={`${chat.fullName}'s avatar`}
           />
-          {online && (
+          {onlineUsers.includes(chat._id) ? (
             <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></span>
-          )}
+          ) : 
+          (
+            <span className="absolute bottom-0 right-0 w-3 h-3 bg-gray-500 rounded-full border-2 border-white dark:border-gray-900"></span>
+
+          )
+        }
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex justify-between items-start mb-1">

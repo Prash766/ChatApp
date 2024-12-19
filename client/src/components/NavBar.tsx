@@ -5,11 +5,13 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
+import { useSocket } from '@/contexts/SocketContext';
 
 export const Navbar = () => {
   const {isDarkTheme , setTheme} = useTheme()
   const { authenticateUser, isAuthenticated, logOut} = useAuthStore()
   const navigate = useNavigate()
+  const socket = useSocket()
 
   useEffect(()=>{
    authenticateUser()
@@ -21,7 +23,9 @@ export const Navbar = () => {
     toast.error(`${res.data.message || "Logout Failed"}`)
 
   }
+
   navigate('/', {replace:true})
+  socket?.disconnect()
 
   }
 
