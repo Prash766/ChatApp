@@ -48,31 +48,42 @@ const getMessages = asyncHandler(async(req , res, next)=>{
    }
 })
 
-const sendMessages = asyncHandler(async(req , res , next)=>{
- try {
-       const {id} = req.params
-       const {text} = req.body
-       const image  = req.file as Express.Multer.File
-       let result = ""
-       if(image){
-            result = await uploadCloudinary(image.path) as string
-       }
-       const message = await Message.create({
-           receiverId:id,
-           senderId:req.user,
-           text:text ? text: '',
-           image : result ? result : ""
-       })
-       return res.status(200).json({
-        message,
-       })
- } catch (error) {
-    console.log("Error while saving messages", error)
-    
- }
-
-})
-
+const sendMessages = asyncHandler(async (req, res) => {
+    try {
+      const { id } = req.params
+      const { text } = req.body
+      const images = req.files as Express.Multer.File[]; 
+  
+      const uploadedImages = [];
+        if (images && images.length > 0) {
+        for (const image of images) {
+          const uploadedUrl = await uploadCloudinary(image.path)
+          uploadedImages.push(uploadedUrl);
+        }
+      }
+  console.log(uploadedImages)
+      const message = await Message.create({
+        receiverId: id,
+        senderId: req.user, 
+        text: text || "", 
+        image: uploadedImages.length > 0 ? uploadedImages : [], 
+      });
+  
+      return res.status(200).json({
+        success: true,
+        message: "Message sent successfully.",
+        data: message,
+      });
+    } catch (error:any) {
+      console.error("Error while saving messages:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send message.",
+        error: error.message,
+      });
+    }
+  });
+  
 
 export {
     getUserSidebar,

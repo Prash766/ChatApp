@@ -4,7 +4,7 @@ export type Message ={
     senderId: Types.ObjectId,
     receiverId: Types.ObjectId,
     text:string,
-    image: string
+    image: string[]
 
 }
 
@@ -22,10 +22,11 @@ const messageSchema = new mongoose.Schema<Message>({
     text:{
         type:String,
     },
-    image:{
-        type:String
-    }
-},{
+    image: [{ 
+        type: String
+    }]
+}
+,{
     timestamps:true
 })
 

@@ -16,7 +16,6 @@ const verifyJWT = asyncHandler(async(req , res , next)=>{
             throw new ApiError("Invalid Token" , 400)
 
         }
-        console.log("decoded token" ,decodedToken)
         req.user = decodedToken.id
         next()
         
