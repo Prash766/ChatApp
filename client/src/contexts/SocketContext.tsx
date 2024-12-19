@@ -1,3 +1,5 @@
+import { useAuthStore } from "@/store/useAuthStore";
+import { useChatStore } from "@/store/useStore";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { Socket, io } from "socket.io-client";
 
@@ -9,13 +11,23 @@ const SocketContext = createContext<Socket | null>(null);
 
 export const SocketProvider = ({ children }: PropsChildren) => {
   const [socket, setSocket] = useState<Socket | null>(null);
+  const {setOnlineUsers} = useChatStore()
+  // const {userId} = useAuthStore()
 
   useEffect(() => {
+    const userId =  localStorage.getItem("userId") || ""
     const socketInstance = io("http://localhost:3000", {
       reconnection: true,
+      query:{
+        userId
+      },
       reconnectionAttempts: 5,
     });
     setSocket(socketInstance);
+    socketInstance.on("getOnlineUsers", (data)=>{
+      console.log(data)
+      setOnlineUsers(data)
+    })
 
     return () => {
       socketInstance.disconnect();

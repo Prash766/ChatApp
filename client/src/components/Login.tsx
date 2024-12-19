@@ -11,7 +11,7 @@ export const Login = () => {
   const [password, setPassword] = useState("");
   const { isDarkTheme } = useTheme();
   const navigate = useNavigate();
-  const { isLoggingIn, loginUser } = useAuthStore();
+  const { isLoggingIn, loginUser ,setUserId} = useAuthStore();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const data = {
@@ -20,8 +20,8 @@ export const Login = () => {
     };
     try {
       const res = await loginUser(data);
-
-      if (res?.status===200) {
+if (res?.status===200) {
+        setUserId(res?.data.user_id)
         navigate("/chat", { replace: true });
       }
     } catch (error: any) {
