@@ -31,6 +31,8 @@ interface AuthStore {
   isSignedUp: boolean;
   isUploading : boolean
   authUser: UserType | null;
+  userId: string;
+  setUserId: (userId: string) => void;
   authenticateUser: () => Promise<any>;
   loginUser: (data: Login) => Promise<any>;
   signUpUser: (data: FormData) => Promise<any>;
@@ -48,6 +50,7 @@ const useAuthStore = create<AuthStore>((set) => ({
     profilePic: "",
     createdAt: "",
   },
+  userId: "",
   isUploading: false,
   isLoggedIn: false,
   isSignedUp: false,
@@ -151,7 +154,12 @@ try {
     
 }
     
-}
+},
+setUserId: (userId)=>{ 
+  set({userId : userId})
+  localStorage.setItem('userId' , userId)
+  
+},
 }));
 
 export { useAuthStore };
