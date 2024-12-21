@@ -17,7 +17,6 @@ import { VideoModal } from "./media/VideoModal";
 import ImageModal from "./media/ImageModal";
 import { useSocket } from "@/contexts/SocketContext";
 import { Socket } from "socket.io-client";
-import { toast } from "sonner";
 
 export interface Message {
   _id: string;
@@ -28,10 +27,10 @@ export interface Message {
   createdAt: string;
 }
 
-
-export const ChatWindow = () => {
+const ChatWindow = () => {
   const [message, setMessage] = useState("");
   const { isDarkTheme } = useTheme();
+  const {isUserTyping , setIsUserTyping} = useChatStore()
   const {
     getMessages,
     messages,
@@ -41,7 +40,7 @@ export const ChatWindow = () => {
     unsubscribeFromMessages,
     selectedUser,
     sendMessages,
-  } = useChatStore(); 
+  } = useChatStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -52,22 +51,51 @@ export const ChatWindow = () => {
   const [files, setFiles] = useState<File[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
-  const socket = useSocket()
+  const [receiverId, setReceiverID] = useState<string>("");
+  const timeoutId = useRef<NodeJS.Timeout | null>(null);
+  const socket = useSocket();
 
   useEffect(() => {
     const fetchMessages = async () => {
-      await getMessages(selectedUser?._id as string);
+      const res = await getMessages(selectedUser?._id as string);
+      if (
+        res.data.messages[res.data.messages.length - 1].receiverId ===
+        localStorage.getItem("userId")
+      ) {
+        console.log(res.data.messages[res.data.messages.length - 1].senderId);
+        setReceiverID(res.data.messages[res.data.messages.length - 1].senderId);
+      } else {
+        console.log(res.data.messages[res.data.messages.length - 1].receiverId);
+        setReceiverID(
+          res.data.messages[res.data.messages.length - 1].receiverId
+        );
+      }
     };
     fetchMessages();
-    subscribeToMessages(socket as Socket)
+    subscribeToMessages(socket as Socket);
 
-    return ()=> unsubscribeFromMessages(socket as Socket)
+    return () => unsubscribeFromMessages(socket as Socket);
+  }, [selectedUser, getMessages, subscribeToMessages, unsubscribeFromMessages]);
+  useEffect(() => {
+    const handleTyping = (data: {
+      type: string;
+      payload: {
+        senderId: string;
+        receiverId: string;
+        isTyping: boolean;
+      };
+    }) => {
+      console.log("Typing event received:", data);
+      console.log("is typing", data.payload.isTyping);
+      setIsUserTyping(data.payload);
+    };
 
-  }, [selectedUser, getMessages ,subscribeToMessages , unsubscribeFromMessages]);
-  
-  // useEffect(()=>{
-  //   console.log("hello")
-  // },[socket])
+    socket?.on("typing", handleTyping);
+
+    return () => {
+      socket?.off("typing", handleTyping);
+    };
+  }, [socket]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
@@ -135,26 +163,31 @@ export const ChatWindow = () => {
   };
 
   const handleSendButton = async () => {
-    if (!message && imageUrls.length === 0 && videos.length === 0 && files.length === 0) {
-      return; 
+    if (
+      !message &&
+      imageUrls.length === 0 &&
+      videos.length === 0 &&
+      files.length === 0
+    ) {
+      return;
     }
 
     const formData = new FormData();
     formData.append("text", message);
 
     files.forEach((file) => {
-      formData.append("files", file); 
+      formData.append("files", file);
     });
 
     try {
-      const res = await sendMessages(formData)
-   
+      const res = await sendMessages(formData);
+
       if (res.status === 200) {
         console.log("Message sent successfully", res);
         setMessage("");
-        setImageUrls([]); 
-        setVideos([]); 
-        setFiles([]); 
+        setImageUrls([]);
+        setVideos([]);
+        setFiles([]);
       } else {
         console.error("Failed to send message", res);
       }
@@ -163,7 +196,60 @@ export const ChatWindow = () => {
     }
   };
 
-  
+  const handleTypingStop = () => {
+    const data = {
+      typing: "typing",
+      payload: {
+        senderId : localStorage.getItem("userId") as string,
+        receiverId: receiverId,
+        isTyping: false,
+      },
+    };
+    setIsUserTyping(data.payload);
+    socket?.emit("typing", data);
+  };
+  const handleTypingStart = () => {
+    const data = {
+      typing: "typing",
+      payload: {
+        senderId : localStorage.getItem("userId") as string,
+        receiverId: receiverId,
+        isTyping: true,
+      },
+    };
+    setIsUserTyping(data.payload);
+    socket?.emit("typing", data);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (
+      e.key !== "Enter" &&
+      e.key !== "Alt" &&
+      e.key !== "Shift" &&
+      e.key !== "Tab"
+    ) {
+      handleTypingStart();
+      if (timeoutId.current) {
+        clearTimeout(timeoutId.current);
+      }
+    }
+  };
+
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (
+      e.key !== "Enter" &&
+      e.key !== "Alt" &&
+      e.key !== "Shift" &&
+      e.key !== "Tab"
+    ) {
+      if (timeoutId.current) {
+        clearTimeout(timeoutId.current);
+      }
+      timeoutId.current = setTimeout(() => {
+        handleTypingStop();
+      }, 2000);
+    }
+  };
 
   return (
     <div className="flex-1 flex flex-col h-[calc(100vh-64px)] mt-16">
@@ -202,13 +288,22 @@ export const ChatWindow = () => {
         }`}
       >
         {messages?.map((message: Message) => {
-        return  <ChatMessages key={message._id} message={message} />
-})}
+          return <ChatMessages key={message._id} message={message}  />;
+        })}
+
+        {(isUserTyping?.isTyping && isUserTyping.receiverId === localStorage.getItem("userId") ) && (
+          <div className="flex items-start p-2 ml-2">
+            <div className="flex items-center gap-2">
+              <div className="px-4 py-2 rounded-2xl bg-gray-100 dark:bg-gray-800 flex gap-2 items-center shadow-sm">
+                <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500 animate-bounce" />
+                <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500 animate-bounce [animation-delay:0.2s]" />
+                <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500 animate-bounce [animation-delay:0.4s]" />
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
-
-
-
 
       <ImagePreview
         setSelectedImage={(index) => setSelectedImage(index)}
@@ -292,6 +387,8 @@ export const ChatWindow = () => {
             type="text"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onKeyUp={handleKeyUp}
             placeholder="Type a message..."
             className={`flex-1 p-2 rounded-full border transition-colors duration-300 ${
               isDarkTheme
@@ -310,7 +407,10 @@ export const ChatWindow = () => {
           <button
             onClick={handleSendButton}
             className={`p-2 rounded-full transition-all duration-300 ${
-              message || imageUrls.length > 0 || videos.length > 0 || files.length > 0
+              message ||
+              imageUrls.length > 0 ||
+              videos.length > 0 ||
+              files.length > 0
                 ? "bg-blue-500 hover:bg-blue-600 cursor-pointer text-white"
                 : "bg-blue-300 cursor-default text-gray-200"
             }`}
@@ -346,3 +446,5 @@ export const ChatWindow = () => {
     </div>
   );
 };
+
+export default ChatWindow;

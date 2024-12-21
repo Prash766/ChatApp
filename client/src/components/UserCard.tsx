@@ -6,7 +6,8 @@ const UserCard = ({chat}:any) => {
     const {isDarkTheme} = useTheme()
     const {setSelectedUser , selectedUser} = useChatStore()
     const isSelected = selectedUser?._id === chat._id
-    const {onlineUsers} = useChatStore()
+    const {onlineUsers , isUserTyping } = useChatStore()
+  
   return (
     <motion.div
     onClick={() => setSelectedUser(chat)} 
@@ -67,6 +68,10 @@ const UserCard = ({chat}:any) => {
                 {chat.unreadCount}
               </span>
             )}
+          </div>
+          <div className="text-green-500">
+            {(isUserTyping?.isTyping && isUserTyping.senderId === chat._id) ? "Typing....." : ""}
+
           </div>
         </div>
       </div>

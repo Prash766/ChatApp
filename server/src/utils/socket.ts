@@ -38,6 +38,24 @@ io.on("connection", (socket) => {
         userSocketMap.delete(userId as string);
         io.emit("getOnlineUsers", Array.from(userSocketMap.keys()));
     });
+
+    socket.on("typing" , (data)=>{
+      console.log(data)
+      const receiverSocketId = getReceiverSocketId(data.payload.receiverId)
+      console.log(receiverSocketId)
+        if(receiverSocketId){
+          const message = {
+            type :"typing",
+            payload:{
+              senderId : userId,
+              receiverId : data.payload.receiverId,
+              isTyping : data.payload.isTyping  
+              }
+          }
+            socket.to(receiverSocketId).emit("typing", message)
+        }
+    })
+
         
     
 });

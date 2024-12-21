@@ -3,9 +3,14 @@ import { useChatStore } from '../store/useStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Message } from './ChatWindow';
 
-const ChatMessages = ({ message }: { message: Message }) => {
+interface MessageProp{
+  message:Message,
+}
+
+const ChatMessages = ({ message } : MessageProp) => {
   const { isDarkTheme } = useTheme();
   const { selectedUser } = useChatStore();
+  
   
   const isOwnMessage = message.senderId === localStorage.getItem('userId');
 

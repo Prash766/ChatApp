@@ -1,6 +1,6 @@
 import ChatPagePlaceholder from "@/components/ChatPagePlaceholder"
 import { ChatSidebar } from "@/components/ChatSidebar"
-import { ChatWindow } from "@/components/ChatWindow"
+import  ChatWindow  from "@/components/ChatWindow"
 import { useTheme } from "@/contexts/ThemeContext"
 import { useChatStore } from "@/store/useStore"
 
@@ -13,7 +13,6 @@ const ChatPage = () => {
           isDarkTheme ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
         }`}>
           <ChatSidebar />
-          {/* <ChatWindow /> */}
           {selectedUser?<ChatWindow /> : <ChatPagePlaceholder/>}
           
         </div>

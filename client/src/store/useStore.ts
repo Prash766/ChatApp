@@ -5,14 +5,25 @@ import { UserType } from "./useAuthStore";
 import { useSocket } from "@/contexts/SocketContext";
 import { Socket } from "socket.io-client";
 
+
+interface Payload {
+  receiverId: string;
+  isTyping: boolean;
+  senderId : string
+  
+
+}
+
 interface ChatStoreType {
   messages: any;
   users: any[];
   selectedUser: UserType | null;
   isUsersLoading: boolean;
   isMessagesLoading: boolean;
+  isUserTyping : Payload | null
   onlineUsers: any[];
   isMessageSending : boolean;
+  setIsUserTyping:  (data : Payload)=> void
   setOnlineUsers: (userIds: any[]) => void;
   subscribeToMessages : (socket :Socket)=> void,
   unsubscribeFromMessages :(socket :Socket) => void
@@ -29,6 +40,7 @@ export const useChatStore = create<ChatStoreType>((set, get) => ({
   isUsersLoading: false,
   isMessagesLoading: false,
   isMessageSending : false,
+  isUserTyping : null,
   onlineUsers: [],
 
   getUsers: async () => {
@@ -50,6 +62,7 @@ export const useChatStore = create<ChatStoreType>((set, get) => ({
     try {
       const res = await axiosClient.get(`/messages/${userId}`);
       set({ messages: res.data.messages });
+      return res
     } catch (error: any) {
       toast.error(error.response.data.message);
     } finally {
@@ -103,5 +116,9 @@ export const useChatStore = create<ChatStoreType>((set, get) => ({
 
   unsubscribeFromMessages : (socket)=>{
     socket?.off("newMessage")
+  },
+
+  setIsUserTyping  : (value : Payload)=>{
+    set({isUserTyping : value})
   }
 })); 
