@@ -9,7 +9,7 @@ const ChatPage = () => {
   const {selectedUser} = useChatStore()
   return (
     <div className={isDarkTheme ? 'dark' : ''}>
-        <div className={`flex h-screen ${
+        <div className={`flex min-h-screen overflow-hidden ${
           isDarkTheme ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
         }`}>
           <ChatSidebar />
