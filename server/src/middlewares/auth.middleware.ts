@@ -11,7 +11,7 @@ const verifyJWT = asyncHandler(async(req , res , next)=>{
         throw new ApiError("Token Not Found", 400)
     }
     try {
-        const decodedToken = await jwt.verify(token , process.env.JWT_SECRET_KEY as string) as JwtPayload
+        const decodedToken =  jwt.verify(token , process.env.JWT_SECRET_KEY as string) as JwtPayload
         if(!decodedToken){
             throw new ApiError("Invalid Token" , 400)
 

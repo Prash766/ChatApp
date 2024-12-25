@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose, { Schema, Document, Model, ObjectId } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
@@ -7,6 +7,7 @@ interface UserType extends Document {
   email: string;
   password: string;
   profilePic: string;
+  friends : ObjectId[]
   generateToken: (payload: any) => Promise<string>;
   isPasswordValid: (password: string) => Promise<boolean>;
 }
@@ -30,6 +31,12 @@ const UserSchema = new Schema<UserType>(
       type: String,
       default: "",
     },
+    friends: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User", 
+      },
+    ],
   },
   {
     timestamps: true,

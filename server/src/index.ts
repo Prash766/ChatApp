@@ -12,10 +12,12 @@ cloudinary.config({
 
 import userRoutes from "./routes/auth.routes";
 import messageRouter from "./routes/messages.routes";
+import FriendRouter from "./routes/friend.routes"
 import errorMiddleware from "./middlewares/error.middleware";
 import { app, server } from "./utils/socket";
 app.use("/api/v1/auth", userRoutes);
 app.use("/api/v1/messages", messageRouter);
+app.use("/api/v1/friends" , FriendRouter)
 
 app.use(errorMiddleware);
 

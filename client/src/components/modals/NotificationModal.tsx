@@ -29,12 +29,10 @@ export const NotificationModal = ({
   pendingRequests,
 }: NotificationModalProps) => {
   const handleAcceptRequest = (requestId: string) => {
-    // Handle accept request logic
     console.log("Accept request:", requestId);
   };
 
   const handleRejectRequest = (requestId: string) => {
-    // Handle reject request logic
     console.log("Reject request:", requestId);
   };
 

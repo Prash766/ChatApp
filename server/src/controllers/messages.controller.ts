@@ -4,18 +4,40 @@ import { User } from "../models/user.model";
 import asyncHandler from "../utils/asyncHandler";
 import { uploadCloudinary } from "../utils/cloudinary";
 import { getReceiverSocketId, io } from "../utils/socket";
+import { FriendRequest } from "../models/friends.model";
 
 const getUserSidebar = asyncHandler(async(req , res, next)=>{
  try {
        const loggedUser = req.user
+       const limit = 10
+       const cursor = req.query.cursor
+       console.log(cursor)
+       
        const filteredUsers = await User.find({
            _id:{
-               $ne: loggedUser
+               $ne: loggedUser,
+               ...(cursor? {$gt: cursor} :  null)
            }
-       })
+       }).limit(limit)
+const users_after_aggregate = await FriendRequest.aggregate([
+
+  {
+    $match:{
+      $or:[
+       { senderId:req.user},
+       { receiverId : req.user}
+      ],
+      status:"ACCEPTED"
+    }
+  }
+])  
+console.log( "users aggragate ", users_after_aggregate)     
+       const prevCursor = cursor && filteredUsers.length>0 ? filteredUsers[0]._id : null
+       const nextCursor = filteredUsers.length > 0? filteredUsers[filteredUsers.length -1]._id : null
        return res.status(200).json({
          filteredUsers,
-           
+         prevCursor,
+         nextCursor,      
        })
  } catch (error) {
     console.log("Error getting users for Sidebar",error)
