@@ -21,6 +21,8 @@ interface ChatStoreType {
   isUsersLoading: boolean;
   isMessagesLoading: boolean;
   isUserTyping : Payload | null
+  nextCursor : string
+  hasMore : boolean
   onlineUsers: any[];
   isMessageSending : boolean;
   setIsUserTyping:  (data : Payload)=> void
@@ -36,6 +38,8 @@ interface ChatStoreType {
 export const useChatStore = create<ChatStoreType>((set, get) => ({
   messages: [],
   users: [],
+  hasMore: true,
+  nextCursor : "",
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
@@ -44,18 +48,30 @@ export const useChatStore = create<ChatStoreType>((set, get) => ({
   onlineUsers: [],
 
   getUsers: async () => {
+    if (!get().hasMore) return;
     set({ isUsersLoading: true });
     try {
-      const res = await axiosClient.get("/messages/users");
-
-      set({ users: res.data.filteredUsers });
+      
+      const res = await axiosClient.get(
+        `/messages/users?cursor=${get().nextCursor}`
+      );
+      const newUsers = res.data.filteredUsers;
+      const map = new Map<string, any>();
+      [...get().users, ...newUsers].forEach(user => map.set(user._id, user));
+      const users = Array.from(map.values());
+      set({
+        users,
+        nextCursor: res.data.nextCursor,
+        hasMore: !!res.data.nextCursor, 
+      });
     } catch (error: any) {
-      console.log(error);
-      toast.error(error.message);
+      console.error(error);
+      toast.error(error.message || "Failed to fetch users");
     } finally {
       set({ isUsersLoading: false });
     }
   },
+
 
   getMessages: async (userId: string) => {
     set({ isMessagesLoading: true });

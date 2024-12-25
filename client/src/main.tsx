@@ -14,5 +14,5 @@ createRoot(document.getElementById('root')!).render(
     <App />
       </ThemeContextProvider>
     </SocketProvider>
-  </StrictMode>,
+   </StrictMode>,
 )

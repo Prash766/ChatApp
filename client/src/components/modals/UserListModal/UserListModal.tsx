@@ -1,119 +1,10 @@
-// import { motion, AnimatePresence } from "framer-motion";
-// import { X, UserPlus, Check } from "lucide-react";
-// import { useState } from "react";
-// import { toast } from "sonner";
-
-// interface User {
-//   _id: string;
-//   fullName: string;
-//   email: string;
-//   profilePic: string;
-// }
-
-// interface UserListModalProps {
-//   isOpen: boolean;
-//   onClose: () => void;
-//   isDarkTheme: boolean;
-//   users: User[];
-// }
-
-// export const UserListModal = ({ isOpen, onClose, isDarkTheme, users }: UserListModalProps) => {
-//   const [sentRequests, setSentRequests] = useState<Set<string>>(new Set());
-
-//   const handleSendRequest = (userId: string) => {
-//     setSentRequests(prev => new Set([...prev, userId]));
-//     toast.success("Friend request sent successfully!", {
-//       duration: 3000,
-//     });
-//   };
-
-//   return (
-//     <AnimatePresence>
-//       {isOpen && (
-//         <motion.div
-//           initial={{ opacity: 0 }}
-//           animate={{ opacity: 1 }}
-//           exit={{ opacity: 0 }}
-//           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-//           onClick={onClose}
-//         >
-//           <motion.div
-//             initial={{ scale: 0.95, opacity: 0 }}
-//             animate={{ scale: 1, opacity: 1 }}
-//             exit={{ scale: 0.95, opacity: 0 }}
-//             onClick={e => e.stopPropagation()}
-//             className={`w-full max-w-md p-6 rounded-lg shadow-xl ${
-//               isDarkTheme ? "bg-gray-800" : "bg-white"
-//             }`}
-//           >
-//             <div className="flex items-center justify-between mb-6">
-//               <h2 className={`text-xl font-bold ${isDarkTheme ? "text-white" : "text-gray-800"}`}>
-//                 Add Friends
-//               </h2>
-//               <button
-//                 onClick={onClose}
-//                 className={`p-2 rounded-full hover:bg-opacity-10 ${
-//                   isDarkTheme ? "hover:bg-white" : "hover:bg-gray-800"
-//                 }`}
-//               >
-//                 <X className={isDarkTheme ? "text-white" : "text-gray-800"} />
-//               </button>
-//             </div>
-
-//             <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-//               {users.map(user => (
-//                 <motion.div
-//                   key={user._id}
-//                   initial={{ opacity: 0, y: 20 }}
-//                   animate={{ opacity: 1, y: 0 }}
-//                   className={`p-4 rounded-lg ${
-//                     isDarkTheme ? "bg-gray-700" : "bg-gray-50"
-//                   } flex items-center justify-between`}
-//                 >
-//                   <div className="flex items-center space-x-4">
-//                     <img
-//                       src={user.profilePic}
-//                       alt={user.fullName}
-//                       className="w-12 h-12 rounded-full object-cover"
-//                     />
-//                     <div>
-//                       <h3 className={`font-medium ${isDarkTheme ? "text-white" : "text-gray-800"}`}>
-//                         {user.fullName}
-//                       </h3>
-//                       <p className={`text-sm ${isDarkTheme ? "text-gray-300" : "text-gray-600"}`}>
-//                         {user.email}
-//                       </p>
-//                     </div>
-//                   </div>
-                  
-//                   {!sentRequests.has(user._id) ? (
-//                     <button
-//                       onClick={() => handleSendRequest(user._id)}
-//                       className="p-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white transition-colors duration-300"
-//                     >
-//                       <UserPlus size={20} />
-//                     </button>
-//                   ) : (
-//                     <div className="p-2 rounded-full bg-green-500 text-white">
-//                       <Check size={20} />
-//                     </div>
-//                   )}
-//                 </motion.div>
-//               ))}
-//             </div>
-//           </motion.div>
-//         </motion.div>
-//       )}
-//     </AnimatePresence>
-//   );
-// };
-
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
-import { useState, useMemo } from "react";
+import { Loader, X } from "lucide-react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { SearchBar } from "./SearchBar";
 import { UserCard } from "./UserCard";
+import { useChatStore } from "@/store/useStore";
 
 interface User {
   _id: string;
@@ -132,6 +23,32 @@ interface UserListModalProps {
 export const UserListModal = ({ isOpen, onClose, isDarkTheme, users }: UserListModalProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sentRequests, setSentRequests] = useState<Set<string>>(new Set());
+  const loaderRef = useRef<HTMLDivElement>(null);
+  const { isUsersLoading, getUsers, hasMore } = useChatStore();
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        console.log(entries)
+        const entry = entries[0];
+        if (entry.isIntersecting && !isUsersLoading && hasMore) {
+         
+          getUsers()
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
+    }
+
+    return () => {
+      if (loaderRef.current) {
+        observer.unobserve(loaderRef.current);
+      }
+    };
+  }, [isOpen, users , hasMore]);
 
   const filteredUsers = useMemo(() => {
     const query = searchQuery.toLowerCase();
@@ -166,9 +83,7 @@ export const UserListModal = ({ isOpen, onClose, isDarkTheme, users }: UserListM
             exit={{ scale: 0.95, opacity: 0 }}
             onClick={e => e.stopPropagation()}
             className={`w-full max-w-md p-6 rounded-2xl shadow-2xl ${
-              isDarkTheme 
-                ? "bg-gray-800 border border-gray-700" 
-                : "bg-white"
+              isDarkTheme ? "bg-gray-800 border border-gray-700" : "bg-white"
             }`}
           >
             <div className="flex items-center justify-between mb-6">
@@ -213,6 +128,10 @@ export const UserListModal = ({ isOpen, onClose, isDarkTheme, users }: UserListM
                   ))}
                 </AnimatePresence>
               )}
+              <div ref={loaderRef} className="flex justify-center items-center py-4">
+                {isUsersLoading && <Loader className="animate-spin text-gray-200" />}
+                {!hasMore && null}
+              </div>
             </div>
           </motion.div>
         </motion.div>
