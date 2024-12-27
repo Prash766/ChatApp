@@ -1,7 +1,7 @@
 import axiosClient from "@/axiosClient";
 import { toast } from "sonner";
 import { create } from "zustand";
-import { UserType } from "./useAuthStore";
+import { FriendsType, UserType } from "./useAuthStore";
 import { useSocket } from "@/contexts/SocketContext";
 import { Socket } from "socket.io-client";
 
@@ -25,10 +25,13 @@ interface ChatStoreType {
   hasMore : boolean
   onlineUsers: any[];
   isMessageSending : boolean;
+  isUsersSidebarLoading : boolean
+  userSidebar : FriendsType 
   setIsUserTyping:  (data : Payload)=> void
   setOnlineUsers: (userIds: any[]) => void;
   subscribeToMessages : (socket :Socket)=> void,
   unsubscribeFromMessages :(socket :Socket) => void
+  getUserSideBar: ()=> Promise<any>
   getUsers: () => Promise<any>;
   getMessages: (userId: string) => Promise<any>;
   setSelectedUser: (selectedId: UserType) => void;
@@ -46,6 +49,8 @@ export const useChatStore = create<ChatStoreType>((set, get) => ({
   isMessageSending : false,
   isUserTyping : null,
   onlineUsers: [],
+  isUsersSidebarLoading:false,
+  userSidebar: {} as FriendsType,
 
   getUsers: async () => {
     if (!get().hasMore) return;
@@ -70,6 +75,21 @@ export const useChatStore = create<ChatStoreType>((set, get) => ({
     } finally {
       set({ isUsersLoading: false });
     }
+  },
+
+  getUserSideBar :async()=> {
+    set({isUsersSidebarLoading: true})
+    try {
+      const res = await axiosClient.get('/messages/sidebar_users')
+      
+      set({userSidebar : res.data.user})
+
+    } catch (error) {
+      console.log(error)
+    }finally{
+      set({isUsersSidebarLoading: false})
+    }
+    
   },
 
 

@@ -22,6 +22,8 @@ export type UserType = {
     createdAt: string;
 };
 
+export type FriendsType = UserType & {friends : UserType[]}
+
 interface AuthStore {
   isAuthenticated: boolean;
   isLoggingIn: boolean;

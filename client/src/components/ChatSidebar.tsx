@@ -11,7 +11,7 @@ import { UserListModal } from "./modals/UserListModal/UserListModal";
 
 export const ChatSidebar = () => {
   const { isDarkTheme } = useTheme();
-  const { getUsers, isUsersLoading, users } = useChatStore();
+  const { getUsers,getUserSideBar, isUsersSidebarLoading, users ,userSidebar } = useChatStore();
   const [isUserListOpen, setIsUserListOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
@@ -51,7 +51,7 @@ export const ChatSidebar = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        await getUsers();
+        await getUserSideBar()
       } catch (error: any) {
         toast.error(error.response.data.message);
       }
@@ -112,11 +112,11 @@ export const ChatSidebar = () => {
       </div>
 
       <div className="overflow-y-auto h-[calc(100vh-200px)] transition-colors duration-300">
-        {isUsersLoading
+        { isUsersSidebarLoading
           ? [...Array(6)].map((_, index) => (
               <ChatSkeleton key={index} />
             ))
-          : users?.map((chat) => (
+          : userSidebar.friends?.map((chat) => (
               <UserCard key={chat._id} chat={chat} />
             ))}
       </div>
