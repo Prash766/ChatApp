@@ -15,11 +15,13 @@ export interface FriendRequestType{
 const FriendRequestSchema = new Schema<FriendRequestType>({
  senderId:{
     type: mongoose.Types.ObjectId,
-    ref: "User" 
+    ref: "User" ,
+    required:true
  },
  receiverId:{
     type:mongoose.Types.ObjectId,
-    ref: "User"
+    ref: "User",
+    required:true
  },
  status:{
     type:String,
@@ -28,6 +30,6 @@ const FriendRequestSchema = new Schema<FriendRequestType>({
  }
 }, {timestamps:true})
 
-FriendRequestSchema.index({senderId : 1 , recieverId: 1} , {unique: true}  )
+FriendRequestSchema.index({senderId : 1 , receiverId: 1} , {unique: true}  )
 
 export const FriendRequest = mongoose.model<FriendRequestType>("friendrequest" , FriendRequestSchema)

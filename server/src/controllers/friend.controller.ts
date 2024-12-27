@@ -4,6 +4,7 @@ import asyncHandler from "../utils/asyncHandler";
 
 const sendRequest = asyncHandler(async (req, res) => {
   const { receiverId } = req.body;
+  console.log("receiver id", receiverId)
   try {
     const friendRequest = await FriendRequest.create({
       senderId: req.user,
@@ -23,50 +24,42 @@ const sendRequest = asyncHandler(async (req, res) => {
 });
 
 const acceptFriendRequest = asyncHandler(async (req, res) => {
-    const { receiverId } = req.body; 
-    try {
-      const friendRequest = await FriendRequest.findOne({
-        senderId: req.user,
-        receiverId: receiverId,
-        status: Status.PENDING,
-      });
-  
-      if (!friendRequest) {
-        return res.status(404).json({
-          success: false,
-          message: "Friend request not found or already processed.",
-        });
-      }
-  
-    const [a, b, c] = await Promise.all([
-        FriendRequest.updateOne(
-          { senderId: req.user, receiverId: receiverId, status: Status.PENDING },
-          { $set: { status: Status.ACCEPTED } }
-        ),
-        User.updateOne(
-          { _id: req.user },
-          { $addToSet: { friends: receiverId } } 
-        ),
-        User.updateOne(
-          { _id: receiverId },
-          { $addToSet: { friends: req.user } } 
-        ),
-      ]);
-      console.log(a , b ,c )
-  
-      res.status(200).json({
-        success: true,
-        message: "Friend request accepted successfully.",
-      });
-    } catch (error: any) {
-      console.error(error);
-      res.status(500).json({
+  const { receiverId } = req.body;
+  try {
+    const friendRequest = await FriendRequest.findOne({
+      senderId: req.user,
+      receiverId: receiverId,
+      status: Status.PENDING,
+    });
+
+    if (!friendRequest) {
+      return res.status(404).json({
         success: false,
-        message: error.message || "Internal server error.",
+        message: "Friend request not found or already processed.",
       });
     }
-  });
-  
+
+    await Promise.all([
+      FriendRequest.updateOne(
+        { senderId: req.user, receiverId: receiverId, status: Status.PENDING },
+        { $set: { status: Status.ACCEPTED } }
+      ),
+      User.updateOne({ _id: req.user }, { $addToSet: { friends: receiverId } }),
+      User.updateOne({ _id: receiverId }, { $addToSet: { friends: req.user } }),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      message: "Friend request accepted successfully.",
+    });
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error.",
+    });
+  }
+});
 
 const rejectFriendRequest = asyncHandler(async (req, res) => {
   const { receiverId } = req.body;

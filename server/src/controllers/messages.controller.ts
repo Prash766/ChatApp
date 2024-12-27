@@ -4,48 +4,177 @@ import { User } from "../models/user.model";
 import asyncHandler from "../utils/asyncHandler";
 import { uploadCloudinary } from "../utils/cloudinary";
 import { getReceiverSocketId, io } from "../utils/socket";
-import { FriendRequest } from "../models/friends.model";
+import { FriendRequest, Status } from "../models/friends.model";
+import ApiError from "../utils/ApiError";
+import mongoose from "mongoose";
 
-const getUserSidebar = asyncHandler(async(req , res, next)=>{
- try {
-       const loggedUser = req.user
-       const limit = 10
-       const cursor = req.query.cursor
-       console.log(cursor)
-       
-       const filteredUsers = await User.find({
-           _id:{
-               $ne: loggedUser,
-               ...(cursor? {$gt: cursor} :  null)
-           }
-       }).limit(limit)
-const users_after_aggregate = await FriendRequest.aggregate([
 
-  {
-    $match:{
-      $or:[
-       { senderId:req.user},
-       { receiverId : req.user}
-      ],
-      status:"ACCEPTED"
+const getUserModal = asyncHandler(async (req, res, next) => {
+  try {
+    const loggedUserId = req.user;
+    console.log('Logged User ID:', loggedUserId); // Debug log
+    const limit = 10;
+    const cursor = req.query.cursor;
+
+    const paginationMatch = cursor 
+      ? { _id: { $gt: new mongoose.Types.ObjectId(cursor as string) } }
+      : {};
+
+    const filteredUsers = await User.aggregate([
+      {
+        $match: {
+          _id: { $ne: loggedUserId },
+          ...paginationMatch
+        },
+      },
+      {
+        $lookup: {
+          from: "friendrequests",
+          let: { currentUserId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $or: [
+                        {
+                          $and: [
+                            { $eq: ["$senderId", "$$currentUserId"] },
+                            { $eq: ["$receiverId", new mongoose.Types.ObjectId(loggedUserId)] }
+                          ]
+                        },
+                        {
+                          $and: [
+                            { $eq: ["$receiverId", "$$currentUserId"] },
+                            { $eq: ["$senderId", new mongoose.Types.ObjectId(loggedUserId)] }
+                          ]
+                        } 
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          as: "friendshipStatus"
+        }
+      },
+      {
+        $addFields: {
+          debug_friendshipCount: { $size: "$friendshipStatus" },
+          debug_friendship: { $first: "$friendshipStatus" }
+        }
+      },
+      {
+        $match: {
+          $expr: {
+            $eq: [
+              {
+                $size: {
+                  $filter: {
+                    input: "$friendshipStatus",
+                    as: "friendship",
+                    cond: { $eq: ["$$friendship.status", Status.ACCEPTED] }
+                  }
+                }
+              },
+              0
+            ]
+          }
+        }
+      },
+      {
+        $addFields: {
+          hasPendingRequest: {
+          
+                  $filter: {
+                    input: "$friendshipStatus",
+                    as: "friendship",
+                    cond: {
+                      $and: [
+                        { $eq: ["$$friendship.status", Status.PENDING] },
+                        { $eq: ["$$friendship.senderId", new mongoose.Types.ObjectId(loggedUserId)] }
+                      ]
+                    }
+                  }
+          
+              },
+          
+          }
+        
+      },
+        
+        {
+          $project: {
+            fullName: 1,
+            email: 1,
+            profilePic: 1,
+            hasPendingRequest: {
+              $map: {
+                input: "$hasPendingRequest",
+                as: "request",
+                in: {
+                  _id: "$$request._id",
+                  senderId: "$$request.senderId",
+                  receiverId: "$$request.receiverId",
+                  status: "$$request.status",
+                  createdAt: "$$request.createdAt"
+                }
+              }
+            },
+          }
+        },
+            { $limit: limit + 1 }
+    ]);
+
+    const cleanedUsers = filteredUsers.map(({...user }) => user);
+    const hasMore = cleanedUsers.length > limit;
+    if (hasMore) {
+      cleanedUsers.pop();
     }
-  }
-])  
-console.log( "users aggragate ", users_after_aggregate)     
-       const prevCursor = cursor && filteredUsers.length>0 ? filteredUsers[0]._id : null
-       const nextCursor = filteredUsers.length > 0? filteredUsers[filteredUsers.length -1]._id : null
-       return res.status(200).json({
-         filteredUsers,
-         prevCursor,
-         nextCursor,      
-       })
- } catch (error) {
-    console.log("Error getting users for Sidebar",error)
+
+    const nextCursor = hasMore ? cleanedUsers[cleanedUsers.length - 1]._id : null;
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        users: cleanedUsers,
+        nextCursor,
+        hasMore
+      }
+    });
+  } catch (error) {
+    console.error("Error getting users for modal:", error);
     return res.status(500).json({
-        message:"Internal Server Error"
+      success: false,
+      message: "Internal Server Error"
+    });
+  }
+});
+
+const getUsersSideBar = asyncHandler(async(req , res)=>{
+  try {
+    const user = await User.findById(req.user).populate({
+      path: 'friends',
+      select: '-friends',
     })
-    
- }
+
+    if(!user){
+      throw new ApiError("User not Found , Internal Server Error" , 400)
+    }
+    console.log( "USER FRIENDS ",user) 
+    return res.status(200).json( {
+      success:true,
+      user  
+    })
+  } catch (error: any) {
+    console.log( error)
+    return res.status(400).json({
+      success:false,
+      message : error.message || "Internal Server Error"
+    })
+  }
 })
 
 const getMessages = asyncHandler(async(req , res, next)=>{
@@ -116,7 +245,8 @@ const sendMessages = asyncHandler(async (req, res) => {
   
 
 export {
-    getUserSidebar,
+    getUserModal,
     getMessages,
-    sendMessages
+    sendMessages,
+    getUsersSideBar
 }
