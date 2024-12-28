@@ -1,26 +1,29 @@
 import { motion } from "framer-motion";
 import { UserPlus, Check } from "lucide-react";
+import { User } from "./UserListModal";
 
 interface UserCardProps {
-  user: {
-    _id: string;
-    fullName: string;
-    email: string;
-    profilePic: string;
-  };
+  user: User;
   isDarkTheme: boolean;
   isRequestSent: boolean;
   onSendRequest: (userId: string) => void;
 }
 
-export const UserCard = ({ user, isDarkTheme, isRequestSent, onSendRequest }: UserCardProps) => {
+export const UserCard = ({
+  user,
+  isDarkTheme,
+  isRequestSent,
+  onSendRequest,
+}: UserCardProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       className={`p-4 rounded-xl ${
-        isDarkTheme ? "bg-gray-700 hover:bg-gray-600" : "bg-gray-50 hover:bg-gray-100"
+        isDarkTheme
+          ? "bg-gray-700 hover:bg-gray-600"
+          : "bg-gray-50 hover:bg-gray-100"
       } flex items-center justify-between transition-colors duration-300`}
     >
       <div className="flex items-center space-x-4">
@@ -33,16 +36,27 @@ export const UserCard = ({ user, isDarkTheme, isRequestSent, onSendRequest }: Us
           <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-700" />
         </div>
         <div>
-          <h3 className={`font-medium ${isDarkTheme ? "text-white" : "text-gray-800"}`}>
+          <h3
+            className={`font-medium ${
+              isDarkTheme ? "text-white" : "text-gray-800"
+            }`}
+          >
             {user.fullName}
           </h3>
-          <p className={`text-sm ${isDarkTheme ? "text-gray-300" : "text-gray-600"}`}>
+          <p
+            className={`text-sm ${
+              isDarkTheme ? "text-gray-300" : "text-gray-600"
+            }`}
+          >
             {user.email}
           </p>
         </div>
       </div>
-      
-      {!isRequestSent ? (
+
+      {!isRequestSent &&
+      !user.hasPendingRequest.some(
+        (request) => request.status === "PENDING"
+      ) ? (
         <button
           onClick={() => onSendRequest(user._id)}
           className="p-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition-all duration-300 transform hover:scale-105"

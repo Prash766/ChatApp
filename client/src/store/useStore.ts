@@ -60,7 +60,9 @@ export const useChatStore = create<ChatStoreType>((set, get) => ({
       const res = await axiosClient.get(
         `/messages/users?cursor=${get().nextCursor}`
       );
-      const newUsers = res.data.filteredUsers;
+      console.log("respons ", res.data.allUsers.users)
+      console.log(res.data.users)
+      const newUsers = res.data.allUsers.users;
       const map = new Map<string, any>();
       [...get().users, ...newUsers].forEach(user => map.set(user._id, user));
       const users = Array.from(map.values());

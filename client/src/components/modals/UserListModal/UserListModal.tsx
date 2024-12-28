@@ -6,11 +6,12 @@ import { SearchBar } from "./SearchBar";
 import { UserCard } from "./UserCard";
 import { useChatStore } from "@/store/useStore";
 
-interface User {
+export interface User {
   _id: string;
   fullName: string;
   email: string;
   profilePic: string;
+  hasPendingRequest : (User & {status : string})[]
 }
 
 interface UserListModalProps {
@@ -113,7 +114,7 @@ export const UserListModal = ({ isOpen, onClose, isDarkTheme, users }: UserListM
                   animate={{ opacity: 1 }}
                   className={`text-center py-8 ${isDarkTheme ? "text-gray-400" : "text-gray-600"}`}
                 >
-                  No users found matching "{searchQuery}"
+                 { isUsersLoading ?  null :`No users found matching ${searchQuery}` }
                 </motion.div>
               ) : (
                 <AnimatePresence>
