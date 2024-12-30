@@ -1,6 +1,8 @@
+import { Events } from "../constants/events";
 import { FriendRequest, Status } from "../models/friends.model";
 import { User } from "../models/user.model";
 import asyncHandler from "../utils/asyncHandler";
+import { getReceiverSocketId, io } from "../utils/socket";
 
 const sendRequest = asyncHandler(async (req, res) => {
   const { receiverId } = req.body;
@@ -10,6 +12,19 @@ const sendRequest = asyncHandler(async (req, res) => {
       senderId: req.user,
       receiverId: receiverId,
     });
+    const receiverSocketId = getReceiverSocketId(receiverId) as string
+    const senderId= getReceiverSocketId(req.user) as string
+    console.log("sender id cookie" , req.user)
+    console.log( "sender id" , senderId)
+    const msg = {
+        senderId: req.user,
+        receiverId : receiverId,
+        friendRequest
+    }
+    console.log("messsafe 0rirfiu",msg)
+    console.log("recvier idddd",receiverSocketId)
+    io.to(receiverSocketId).emit(Events.FRIEND_REQUEST_SENT, msg)
+    
     return res.status(200).json({
       success: true,
       message: "Friend Request Sent",
