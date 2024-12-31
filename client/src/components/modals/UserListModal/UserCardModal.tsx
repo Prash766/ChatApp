@@ -1,6 +1,9 @@
 import { motion } from "framer-motion";
 import { UserPlus, Check } from "lucide-react";
 import { User } from "./UserListModal";
+import useFriendStore from "@/store/useFriendStore";
+import { toast } from "sonner";
+import { useState } from "react";
 
 interface UserCardProps {
   user: User;
@@ -9,12 +12,34 @@ interface UserCardProps {
   onSendRequest: (userId: string) => void;
 }
 
-export const UserCard = ({
+export const UserCardModal = ({
   user,
   isDarkTheme,
-  isRequestSent,
   onSendRequest,
 }: UserCardProps) => {
+  const {  sendFriendRequest , setFriendRequestReceiver } = useFriendStore()
+  const [isRequestSent , setIsRequestSent] = useState(false)
+
+  async function handleFriendRequest(){
+try {
+  console.log("receiver id " , user._id)
+      setFriendRequestReceiver(user._id)
+      const res = await sendFriendRequest()
+      console.log("Res" , res)
+      if(res.status===200){
+        toast.success("Friend request sent successfully!", {
+          duration: 3000,
+          className: isDarkTheme ? "dark-toast" : "",
+        });   
+        setIsRequestSent(true)         
+
+      }
+} catch (error) {
+  console.log(error)
+  
+}    
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -58,7 +83,8 @@ export const UserCard = ({
         (request) => request.status === "PENDING"
       ) ? (
         <button
-          onClick={() => onSendRequest(user._id)}
+          // onClick={() => onSendRequest(user._id)}
+          onClick={handleFriendRequest}
           className="p-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition-all duration-300 transform hover:scale-105"
         >
           <UserPlus size={20} />

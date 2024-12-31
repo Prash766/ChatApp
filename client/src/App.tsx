@@ -5,6 +5,7 @@ import LandingPage from "./pages/LandingPage"
 import { Navbar } from "./components/NavBar"
 import ChatPage from "./pages/ChatPage"
 import { ProfilePage } from "./pages/ProfilePage"
+import { SocketProvider } from "./contexts/SocketContext"
 
 
 const App = () => {
@@ -17,8 +18,15 @@ const App = () => {
       <Route path ='/signup' element= {<AuthPage/>}/>
       <Route path='/' element={<LandingPage/>}/>
       <Route element={<ProtectedRoutes/>}>
-      <Route path='/chat' element={<ChatPage/>}/>
-      <Route path='/profile' element={<ProfilePage/>}/>
+      <Route path='/chat' element={
+        <SocketProvider>
+
+        <ChatPage/>
+        </SocketProvider>
+        }/>
+      <Route path='/profile' element={
+        <ProfilePage/>
+        }/>
       </Route>
 
     </Routes>

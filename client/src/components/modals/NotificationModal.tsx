@@ -18,6 +18,7 @@ interface NotificationModalProps {
   onClose: () => void;
   isDarkTheme: boolean;
   notifications: Notification[];
+  noitficationCount : number
   pendingRequests: any[];
 }
 

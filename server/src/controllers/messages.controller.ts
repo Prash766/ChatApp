@@ -12,7 +12,7 @@ import mongoose from "mongoose";
 const getUserModal = asyncHandler(async (req, res, next) => {
   try {
     const loggedUserId = req.user;
-    console.log('Logged User ID:', loggedUserId); // Debug log
+    console.log('Logged User ID:', loggedUserId); 
     const limit = 10;
     const cursor = req.query.cursor;
 
@@ -23,7 +23,7 @@ const getUserModal = asyncHandler(async (req, res, next) => {
     const filteredUsers = await User.aggregate([
       {
         $match: {
-          _id: { $ne: loggedUserId },
+          _id: { $ne: new mongoose.Types.ObjectId(loggedUserId as string) },
           ...paginationMatch
         },
       },
@@ -163,7 +163,7 @@ const getUsersSideBar = asyncHandler(async(req , res)=>{
     if(!user){
       throw new ApiError("User not Found , Internal Server Error" , 400)
     }
-    console.log( "USER FRIENDS ",user) 
+    // console.log( "USER FRIENDS ",user) 
     return res.status(200).json( {
       success:true,
       user  

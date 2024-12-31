@@ -23,7 +23,7 @@ export const Navbar = () => {
     toast.error(`${res.data.message || "Logout Failed"}`)
 
   }
-
+localStorage.removeItem("userId")
   navigate('/', {replace:true})
   socket?.disconnect()
 

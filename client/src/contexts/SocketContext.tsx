@@ -11,44 +11,49 @@ const SocketContext = createContext<Socket | null>(null);
 
 export const SocketProvider = ({ children }: PropsChildren) => {
   const [socket, setSocket] = useState<Socket | null>(null);
-  const {setOnlineUsers} = useChatStore()
-  // const {userId} = useAuthStore()
+  const { setOnlineUsers } = useChatStore();
+  const {isAuthenticated, authUser} = useAuthStore()
 
   useEffect(() => {
-    const userId =  localStorage.getItem("userId") || ""
+    const userId = localStorage.getItem("userId");
+
+    if (!userId) {
+      // console.warn("No userId found, socket connection will not be established.");
+      return;
+    }
+
     const socketInstance = io("http://localhost:3000", {
       reconnection: true,
-      query:{
-        userId
+      query: {
+        userId,
       },
       reconnectionAttempts: 5,
     });
+
     setSocket(socketInstance);
-    socketInstance.on("getOnlineUsers", (data)=>{
-      console.log(data)
-      setOnlineUsers(data)
-    })
+
+    socketInstance.on("getOnlineUsers", (data) => {
+      console.log("Online users received:", data);
+      setOnlineUsers(data);
+    });
 
     return () => {
+      console.log("Socket disconnecting...");
       socketInstance.disconnect();
     };
-  }, []);
+  }, [setOnlineUsers, isAuthenticated , authUser?._id]);
 
   if (!socket) {
     return null;
   }
 
-  return (
-    <SocketContext.Provider value={socket}>
-      {children}
-    </SocketContext.Provider>
-  );
+  return <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>;
 };
 
 export const useSocket = () => {
   const socket = useContext(SocketContext);
   if (!socket) {
-    console.warn("Socket is not initialized");
+    // console.warn("Socket is not initialized");
   }
   return socket;
 };

@@ -3,7 +3,7 @@ import { Loader, X } from "lucide-react";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { SearchBar } from "./SearchBar";
-import { UserCard } from "./UserCard";
+import { UserCardModal } from "./UserCardModal";
 import { useChatStore } from "@/store/useStore";
 
 export interface User {
@@ -18,10 +18,11 @@ interface UserListModalProps {
   isOpen: boolean;
   onClose: () => void;
   isDarkTheme: boolean;
+  notificationCount : number
   users: User[];
 }
 
-export const UserListModal = ({ isOpen, onClose, isDarkTheme, users }: UserListModalProps) => {
+export const UserListModal = ({ isOpen, onClose, isDarkTheme, users , notificationCount }: UserListModalProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sentRequests, setSentRequests] = useState<Set<string>>(new Set());
   const loaderRef = useRef<HTMLDivElement>(null);
@@ -60,12 +61,9 @@ export const UserListModal = ({ isOpen, onClose, isDarkTheme, users }: UserListM
     );
   }, [users, searchQuery]);
 
-  const handleSendRequest = (userId: string) => {
+  const handleSendRequest = async(userId: string) => {
     setSentRequests(prev => new Set([...prev, userId]));
-    toast.success("Friend request sent successfully!", {
-      duration: 3000,
-      className: isDarkTheme ? "dark-toast" : "",
-    });
+ 
   };
 
   return (
@@ -119,7 +117,7 @@ export const UserListModal = ({ isOpen, onClose, isDarkTheme, users }: UserListM
               ) : (
                 <AnimatePresence>
                   {filteredUsers.map(user => (
-                    <UserCard
+                    <UserCardModal
                       key={user._id}
                       user={user}
                       isDarkTheme={isDarkTheme}
