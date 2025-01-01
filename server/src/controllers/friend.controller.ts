@@ -6,7 +6,7 @@ import ApiError from "../utils/ApiError";
 import asyncHandler from "../utils/asyncHandler";
 import { getReceiverSocketId, io } from "../utils/socket";
 
-const pendingRequestList = asyncHandler(async(req  , res)=>{
+const pendingRequestList = asyncHandler(async (req, res) => {
   try {
     const pendingList = await FriendRequest.aggregate([
       {
@@ -20,19 +20,18 @@ const pendingRequestList = asyncHandler(async(req  , res)=>{
           foreignField: "_id",
           localField: "senderId",
           as: "senderInfo",
-          pipeline:[
+          pipeline: [
             {
-              $project:{
+              $project: {
                 _id: 1,
-                fullName : 1 ,
-                profilePic:1,
-                email:1,
-                createdAt : 1
-              }
-            }
-          ]
+                fullName: 1,
+                profilePic: 1,
+                email: 1,
+                createdAt: 1,
+              },
+            },
+          ],
         },
-        
       },
       {
         $lookup: {
@@ -40,63 +39,61 @@ const pendingRequestList = asyncHandler(async(req  , res)=>{
           foreignField: "_id",
           localField: "receiverId",
           as: "receiverInfo",
-          pipeline:[
+          pipeline: [
             {
-              $project:{
+              $project: {
                 _id: 1,
-                fullName : 1 ,
-                profilePic:1,
-                email:1,
-                createdAt : 1
-              }
-            }
-          ]
+                fullName: 1,
+                profilePic: 1,
+                email: 1,
+                createdAt: 1,
+              },
+            },
+          ],
         },
-        
       },
       {
-        $unwind:{
-          path:"$senderInfo",
-
-        }
+        $unwind: {
+          path: "$senderInfo",
+        },
       },
       {
-        $unwind :{
- path : "$receiverInfo"
-        }
-
-      }
-    
+        $unwind: {
+          path: "$receiverInfo",
+        },
+      },
     ]);
-    
-    console.log("pedning list",pendingList)
+
+    console.log("pedning list", pendingList);
     return res.status(200).json({
-      success:true,
-      pendingList
-    })
-  } catch (error : any) {
-    console.log(error)
+      success: true,
+      pendingList,
+    });
+  } catch (error: any) {
+    console.log(error);
     return res.json({
-      message : error.message || "Internal Server Error"
-    })
+      message: error.message || "Internal Server Error",
+    });
   }
-})
+});
 
 const sendRequest = asyncHandler(async (req, res) => {
   const { receiverId } = req.body;
-  console.log("receiver id", receiverId)
+  console.log("receiver id", receiverId);
   try {
-
     const isRequestExist = await FriendRequest.findOne({
-      senderId : req.user,
-      receiverId : receiverId
-    }).select("-password")
-    if(isRequestExist){
-
-      const coolDownTimeExpired = Date.now() > new Date(isRequestExist.cooldown).getTime();
-      const updateRequest= await FriendRequest.findByIdAndUpdate(isRequestExist._id, {
-        $set:{cooldown : null}
-      })
+      senderId: req.user,
+      receiverId: receiverId,
+    }).select("-password");
+    if (isRequestExist) {
+      const coolDownTimeExpired =
+        Date.now() > new Date(isRequestExist.cooldown).getTime();
+      const updateRequest = await FriendRequest.findByIdAndUpdate(
+        isRequestExist._id,
+        {
+          $set: { cooldown: null },
+        }
+      );
       if (!coolDownTimeExpired) {
         return res.status(400).json({
           success: false,
@@ -104,36 +101,31 @@ const sendRequest = asyncHandler(async (req, res) => {
         });
       }
       return res.json({
-        success:true,
-        message:"Request Sent",
-      })
-      
-
+        success: true,
+        message: "Request Sent",
+      });
     }
 
-    const [friendRequest,senderInfo, receiverInfo] = await Promise.all([
+    const [friendRequest, senderInfo, receiverInfo] = await Promise.all([
       FriendRequest.create({
         senderId: req.user,
         receiverId: receiverId,
       }),
       User.findById(req.user).select("-password"),
-      User.findById(receiverId).select("-password")
-    ]
-
-    ) 
-    const receiverSocketId =  getReceiverSocketId(receiverId) as string;
+      User.findById(receiverId).select("-password"),
+    ]);
+    const receiverSocketId = getReceiverSocketId(receiverId) as string;
     const senderId = getReceiverSocketId(req.user) as string;
     console.log("sender id cookie", req.user);
     console.log("sender id", senderId);
     const msg = {
       senderId: req.user,
       receiverId: receiverId,
-      payload:{
+      payload: {
         friendRequest,
         senderInfo,
-        receiverInfo
-
-      }
+        receiverInfo,
+      },
     };
     console.log("messsafe 0rirfiu", msg);
     console.log("recvier idddd", receiverSocketId);
@@ -155,14 +147,14 @@ const sendRequest = asyncHandler(async (req, res) => {
 const acceptFriendRequest = asyncHandler(async (req, res) => {
   const { id, senderId } = req.body;
   try {
-    const friendRequest = await FriendRequest.findById(id)
+    const friendRequest = await FriendRequest.findById(id);
     if (!friendRequest) {
       return res.status(404).json({
         success: false,
         message: "Friend request not found or already processed.",
       });
     }
-    const [,, , senderInfo , receiverInfo] = await Promise.all([
+    const [, , , senderInfo, receiverInfo] = await Promise.all([
       FriendRequest.updateOne(
         { _id: id },
         { $set: { status: Status.ACCEPTED } }
@@ -170,21 +162,21 @@ const acceptFriendRequest = asyncHandler(async (req, res) => {
       User.updateOne({ _id: req.user }, { $addToSet: { friends: senderId } }),
       User.updateOne({ _id: senderId }, { $addToSet: { friends: req.user } }),
       User.findById(senderId).select("-password"),
-      User.findById(req.user).select("-password")
+      User.findById(req.user).select("-password"),
     ]);
     const msg = {
       type: "request-accepted",
-      receiverId : req.user,
+      receiverId: req.user,
       senderId: senderId,
-      payload:{
+      payload: {
         senderInfo,
-        receiverInfo
-      }
-    }
-    console.log("msg",msg)
+        receiverInfo,
+      },
+    };
+    console.log("msg", msg);
     const senderSocketId = getReceiverSocketId(senderId) as string;
 
-    io.to(senderSocketId).emit(Events.FRIEND_REQUEST_ACCEPTED,msg )
+    io.to(senderSocketId).emit(Events.FRIEND_REQUEST_ACCEPTED, msg);
 
     res.status(200).json({
       success: true,
@@ -200,48 +192,49 @@ const acceptFriendRequest = asyncHandler(async (req, res) => {
 });
 
 const rejectFriendRequest = asyncHandler(async (req, res) => {
-  const { senderId , id } = req.body;
+  const { senderId, id } = req.body;
   try {
-    const isFriend =await FriendRequest.findById(id)
-    if(!isFriend) throw new ApiError("Invalid Id", 400)
+    const isFriend = await FriendRequest.findById(id);
+    if (!isFriend) throw new ApiError("Invalid Id", 400);
 
-    const [friendRequest , senderInfo , receiverInfo ] = await Promise.all([ 
+    const [friendRequest, senderInfo, receiverInfo] = await Promise.all([
       FriendRequest.findByIdAndUpdate(
         id,
         {
           $set: {
-            cooldown: Date.now() + 60 * 60 * 24 * 1000, 
+            cooldown: Date.now() + 60 * 60 * 24 * 1000,
           },
         },
-        { new: true } 
+        { new: true }
       ),
-  
-    User.findById(new mongoose.Types.ObjectId(senderId as string)).select("-password"),
-    User.findById(new mongoose.Types.ObjectId(req.user as string)).select("-password")
-  ])  
 
-  const senderSocketId = getReceiverSocketId(senderId) as string
-  console.log("sender socket id",senderSocketId)
-  const msg = {
-    type : "request-rejected",
-    senderId : senderId,
-    receiverId : req.user,
-    payload :{
-      friendRequest
+      User.findById(new mongoose.Types.ObjectId(senderId as string)).select(
+        "-password"
+      ),
+      User.findById(new mongoose.Types.ObjectId(req.user as string)).select(
+        "-password"
+      ),
+    ]);
 
-    }
+    const senderSocketId = getReceiverSocketId(senderId) as string;
+    console.log("sender socket id", senderSocketId);
+    const msg = {
+      type: "request-rejected",
+      senderId: senderId,
+      receiverId: req.user,
+      payload: {
+        friendRequest,
+      },
+    };
+    io.to(senderSocketId).emit(Events.FRIEND_REQUEST_REJECTED, msg);
 
-  }
-  io.to(senderSocketId).emit(Events.FRIEND_REQUEST_REJECTED ,msg )
-
-
-      res.status(200).json({
+    res.status(200).json({
       success: true,
       message: "Friend Request Sent",
-      friendRequest:{
+      friendRequest: {
         senderInfo,
-        receiverInfo
-      }
+        receiverInfo,
+      },
     });
   } catch (error) {
     console.log(error);
@@ -253,8 +246,8 @@ const rejectFriendRequest = asyncHandler(async (req, res) => {
 });
 
 export {
-   sendRequest, 
-   acceptFriendRequest, 
-   rejectFriendRequest,
-   pendingRequestList
-  };
+  sendRequest,
+  acceptFriendRequest,
+  rejectFriendRequest,
+  pendingRequestList,
+};
