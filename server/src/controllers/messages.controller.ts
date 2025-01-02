@@ -1,4 +1,3 @@
-import { UploadApiResponse } from "cloudinary";
 import { Message } from "../models/message.model";
 import { User } from "../models/user.model";
 import asyncHandler from "../utils/asyncHandler";
@@ -8,25 +7,27 @@ import { FriendRequest, Status } from "../models/friends.model";
 import ApiError from "../utils/ApiError";
 import mongoose from "mongoose";
 
-
 const getUserModal = asyncHandler(async (req, res, next) => {
   try {
+    console.log("USER MODAL CALLED")
     const loggedUserId = req.user;
-    console.log('Logged User ID:', loggedUserId); 
     const limit = 10;
     const cursor = req.query.cursor;
 
-    const paginationMatch = cursor 
+    const paginationMatch = cursor
       ? { _id: { $gt: new mongoose.Types.ObjectId(cursor as string) } }
       : {};
 
     const filteredUsers = await User.aggregate([
       {
         $match: {
-          _id: { $ne: new mongoose.Types.ObjectId(loggedUserId as string) },
-          ...paginationMatch
-        },
+          $and: [
+            { _id: { $ne: new mongoose.Types.ObjectId(loggedUserId) } },
+           { ...paginationMatch}
+          ]
+        }
       },
+    
       {
         $lookup: {
           from: "friendrequests",
@@ -35,36 +36,42 @@ const getUserModal = asyncHandler(async (req, res, next) => {
             {
               $match: {
                 $expr: {
-                  $and: [
+                  $or: [
                     {
-                      $or: [
-                        {
-                          $and: [
-                            { $eq: ["$senderId", "$$currentUserId"] },
-                            { $eq: ["$receiverId", new mongoose.Types.ObjectId(loggedUserId)] }
-                          ]
-                        },
-                        {
-                          $and: [
-                            { $eq: ["$receiverId", "$$currentUserId"] },
-                            { $eq: ["$senderId", new mongoose.Types.ObjectId(loggedUserId)] }
-                          ]
-                        } 
-                      ]
-                    }
-                  ]
-                }
-              }
-            }
+                      $and: [
+                        { $eq: ["$senderId", "$$currentUserId"] },
+                        { $eq: ["$receiverId", new mongoose.Types.ObjectId(loggedUserId)] },
+                      ],
+                    },
+                    {
+                      $and: [
+                        { $eq: ["$receiverId", "$$currentUserId"] },
+                        { $eq: ["$senderId", new mongoose.Types.ObjectId(loggedUserId)] },
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
           ],
-          as: "friendshipStatus"
-        }
+          as: "friendshipStatus",
+        },
       },
       {
         $addFields: {
-          debug_friendshipCount: { $size: "$friendshipStatus" },
-          debug_friendship: { $first: "$friendshipStatus" }
-        }
+          hasPendingRequest: {
+            $filter: {
+              input: "$friendshipStatus",
+              as: "friendship",
+              cond: {
+                $and: [
+                  { $eq: ["$$friendship.status", Status.PENDING] },
+                  { $eq: ["$$friendship.senderId", new mongoose.Types.ObjectId(loggedUserId)] },
+                ],
+              },
+            },
+          },
+        },
       },
       {
         $match: {
@@ -75,80 +82,62 @@ const getUserModal = asyncHandler(async (req, res, next) => {
                   $filter: {
                     input: "$friendshipStatus",
                     as: "friendship",
-                    cond: { $eq: ["$$friendship.status", Status.ACCEPTED] }
-                  }
-                }
+                    cond: { $eq: ["$$friendship.status", Status.ACCEPTED] },
+                  },
+                },
               },
-              0
-            ]
-          }
-        }
+              0, 
+            ],
+          },
+        },
       },
       {
-        $addFields: {
+        $project: {
+          fullName: 1,
+          email: 1,
+          profilePic: 1,
           hasPendingRequest: {
-          
-                  $filter: {
-                    input: "$friendshipStatus",
-                    as: "friendship",
-                    cond: {
-                      $and: [
-                        { $eq: ["$$friendship.status", Status.PENDING] },
-                        { $eq: ["$$friendship.senderId", new mongoose.Types.ObjectId(loggedUserId)] }
-                      ]
-                    }
-                  }
-          
+            $map: {
+              input: "$hasPendingRequest",
+              as: "request",
+              in: {
+                _id: "$$request._id",
+                senderId: "$$request.senderId",
+                receiverId: "$$request.receiverId",
+                status: "$$request.status",
+                cooldown : "$$request.cooldown",
+                createdAt: "$$request.createdAt",
               },
-          
-          }
-        
-      },
-        
-        {
-          $project: {
-            fullName: 1,
-            email: 1,
-            profilePic: 1,
-            hasPendingRequest: {
-              $map: {
-                input: "$hasPendingRequest",
-                as: "request",
-                in: {
-                  _id: "$$request._id",
-                  senderId: "$$request.senderId",
-                  receiverId: "$$request.receiverId",
-                  status: "$$request.status",
-                  createdAt: "$$request.createdAt"
-                }
-              }
             },
-          }
+          },
         },
-            { $limit: limit + 1 }
+      },
+      { $sort: { _id: 1 } }, 
+      { $limit: limit + 1 }, 
     ]);
-
-    const cleanedUsers = filteredUsers.map(({...user }) => user);
-    const hasMore = cleanedUsers.length > limit;
+    const hasMore = filteredUsers.length > limit;
     if (hasMore) {
-      cleanedUsers.pop();
+      filteredUsers.pop()
     }
 
-    const nextCursor = hasMore ? cleanedUsers[cleanedUsers.length - 1]._id : null;
+    const nextCursor = hasMore ? filteredUsers[filteredUsers.length - 1]._id : null;
 
     return res.status(200).json({
       success: true,
       allUsers: {
-        users: cleanedUsers,
+        users: filteredUsers,
         nextCursor,
-        hasMore
-      }
+        hasMore,
+      },
     });
-  } catch (error) {
-    console.error("Error getting users for modal:", error);
+  } catch (error: any) {
+    console.error("Error getting users for modal:", {
+      error: error.message,
+      stack: error.stack,
+    });
     return res.status(500).json({
       success: false,
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
   }
 });
