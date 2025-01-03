@@ -2,7 +2,6 @@ import axiosClient from "@/axiosClient";
 import { toast } from "sonner";
 import { create } from "zustand";
 import { FriendsType, UserType } from "./useAuthStore";
-import { useSocket } from "@/contexts/SocketContext";
 import { Socket } from "socket.io-client";
 
 
@@ -10,8 +9,6 @@ interface Payload {
   receiverId: string;
   isTyping: boolean;
   senderId : string
-  
-
 }
 
 interface ChatStoreType {
@@ -27,6 +24,8 @@ interface ChatStoreType {
   isMessageSending : boolean;
   isUsersSidebarLoading : boolean
   userSidebar : FriendsType 
+  setUserSidebar : (sidebarUsers: FriendsType )=> void
+  setUsers: (newUsers: any[]) => void
   setIsUserTyping:  (data : Payload)=> void
   setOnlineUsers: (userIds: any[]) => void;
   subscribeToMessages : (socket :Socket)=> void,
@@ -52,6 +51,16 @@ export const useChatStore = create<ChatStoreType>((set, get) => ({
   isUsersSidebarLoading:false,
   userSidebar: {} as FriendsType,
 
+  setUserSidebar: (sidebarUsers)=>{
+    set({userSidebar : sidebarUsers})
+
+  },
+
+  setUsers: (newUsers)=>{
+    set({users : newUsers})
+  },
+
+
   getUsers: async () => {
     if (!get().hasMore) return;
     set({ isUsersLoading: true });
@@ -67,8 +76,8 @@ export const useChatStore = create<ChatStoreType>((set, get) => ({
       const users = Array.from(map.values());
       set({
         users,
-        nextCursor: res.data.nextCursor,
-        hasMore: !!res.data.nextCursor, 
+        nextCursor: res.data.allUsers.nextCursor,
+        hasMore: !!res.data.allUsers.nextCursor, 
       });
     } catch (error: any) {
       console.error(error);
