@@ -1,44 +1,54 @@
 import { motion } from "framer-motion";
-import { UserPlus, Check } from "lucide-react";
+import { UserPlus, Check, Clock } from "lucide-react";
 import { User } from "./UserListModal";
 import useFriendStore from "@/store/useFriendStore";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useSocket } from "@/contexts/SocketContext";
 
 interface UserCardProps {
   user: User;
   isDarkTheme: boolean;
-  isRequestSent: boolean;
-  onSendRequest: (userId: string) => void;
 }
 
 export const UserCardModal = ({
   user,
   isDarkTheme,
-  onSendRequest,
 }: UserCardProps) => {
-  const {  sendFriendRequest , setFriendRequestReceiver } = useFriendStore()
-  const [isRequestSent , setIsRequestSent] = useState(false)
+  const { sendFriendRequest, setFriendRequestReceiver } = useFriendStore();
+  const [isRequestSent, setIsRequestSent] = useState(false);
+  const socket = useSocket();
 
-  async function handleFriendRequest(){
-try {
-  console.log("receiver id " , user._id)
-      setFriendRequestReceiver(user._id)
-      const res = await sendFriendRequest()
-      console.log("Res" , res)
-      if(res.status===200){
+  async function handleFriendRequest() {
+    try {
+      setFriendRequestReceiver(user._id);
+      const res = await sendFriendRequest();
+      if (res.status === 200) {
         toast.success("Friend request sent successfully!", {
           duration: 3000,
           className: isDarkTheme ? "dark-toast" : "",
-        });   
-        setIsRequestSent(true)         
-
+        });
+        setIsRequestSent(true);
       }
-} catch (error) {
-  console.log(error)
-  
-}    
+    } catch (error) {
+      console.log(error);
+    }
   }
+
+  const pendingRequest = user.hasPendingRequest?.find(
+    (request) => request.receiverId === user._id && request.status === "PENDING"
+  );
+
+  const isInCooldown =
+    pendingRequest?.cooldown &&
+    new Date(pendingRequest.cooldown).getTime() > Date.now();
+
+  const remainingCooldownTime = isInCooldown
+    ? Math.ceil(
+        (new Date(pendingRequest?.cooldown || "").getTime() - Date.now()) /
+          (1000 * 60 * 60 * 24)
+      )
+    : null;
 
   return (
     <motion.div
@@ -78,21 +88,26 @@ try {
         </div>
       </div>
 
-      {!isRequestSent &&
-      !user.hasPendingRequest.some(
-        (request) => request.status === "PENDING"
-      ) ? (
+      {isInCooldown ? (
+        <div
+          className="p-2.5 rounded-xl bg-yellow-500 text-white transform hover:scale-105 transition-all duration-300 relative group"
+        >
+          <Clock size={20} />
+          <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            Cooldown: {remainingCooldownTime} day(s)
+          </span>
+        </div>
+      ) : isRequestSent ? (
+        <div className="p-2.5 rounded-xl bg-green-500 text-white transform hover:scale-105 transition-all duration-300">
+          <Check size={20} />
+        </div>
+      ) : (
         <button
-          // onClick={() => onSendRequest(user._id)}
           onClick={handleFriendRequest}
           className="p-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition-all duration-300 transform hover:scale-105"
         >
           <UserPlus size={20} />
         </button>
-      ) : (
-        <div className="p-2.5 rounded-xl bg-green-500 text-white transform hover:scale-105 transition-all duration-300">
-          <Check size={20} />
-        </div>
       )}
     </motion.div>
   );
