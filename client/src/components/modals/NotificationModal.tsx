@@ -1,6 +1,12 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, UserCheck, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
+import { useEffect } from "react";
+import useFriendStore, { PendingFriend } from "@/store/useFriendStore";
+import { useChatStore } from "@/store/useStore";
+import { FriendsType } from "@/store/useAuthStore";
+import { useSocket } from "@/contexts/SocketContext";
+import { Events } from "@/constants/events";
 
 interface Notification {
   id: string;
@@ -29,13 +35,72 @@ export const NotificationModal = ({
   notifications,
   pendingRequests,
 }: NotificationModalProps) => {
-  const handleAcceptRequest = (requestId: string) => {
-    console.log("Accept request:", requestId);
+  const {getPendingFriendList , pendingFriendList, acceptFriendRequest , rejectFriendRequest, setPendingList, notificationCount , setNotificationCount}= useFriendStore()
+  const userId = localStorage.getItem("userId")
+  const socket = useSocket()
+  const {userSidebar , setUserSidebar} = useChatStore()
+
+  const handleAcceptRequest = async(request  : PendingFriend) => {
+    const res = await acceptFriendRequest(request._id , request.senderId)
+    const friends  = userSidebar.friends
+    const acceptedUser = {
+      ...userSidebar,
+      friends : [...friends , request.senderInfo]
+    }
+    setUserSidebar(acceptedUser)
+
+    const pendingList = pendingFriendList.filter(list=> list._id !== request._id)
+    // const msg= {
+    //   senderId : request.senderId,
+    //   receiverId : request.receiverId,
+    //   payload:{
+    //     senderInfo :  request.senderInfo,
+    //     receiverInfo : request.receiverInfo
+    //   }
+    // }
+    // socket?.emit(Events.FRIEND_REQUEST_ACCEPTED ,msg)
+
+    setPendingList(pendingList)  
+    setNotificationCount(notificationCount-1)
+      
   };
 
-  const handleRejectRequest = (requestId: string) => {
-    console.log("Reject request:", requestId);
+  const handleRejectRequest = async(request :PendingFriend) => {
+    const res = await rejectFriendRequest(request.senderId , request._id)
+    const pendingList = pendingFriendList.filter(list=> list._id !== request._id)
+    setPendingList(pendingList)
+    setNotificationCount(notificationCount-1)
+    console.log(res)
+
+    console.log("Reject request:", request.senderId);
   };
+  const filteredList = pendingFriendList.filter(list=> list.receiverId === userId && list.cooldown === null)
+
+  useEffect(()=>{
+  async  function fetchPendingList(){
+   await getPendingFriendList()
+    }
+    fetchPendingList()
+
+  },[])
+
+  useEffect(()=>{
+socket?.on(Events.FRIEND_REQUEST_SENT , (data)=>{
+  console.log("data fromt eh backend for requet sent" , data)
+  const obj = {
+    _id: data.payload.friendRequest._id,
+    receiverId : data.payload.friendRequest.receiverId,
+    senderId : data.payload.friendRequest.senderId,
+    senderInfo : data.payload.senderInfo,
+    receiverInfo : data.payload.receiverInfo,
+    status : data.payload.friendRequest.status
+  }
+  const updatedFriendList = [...pendingFriendList , obj] as PendingFriend[]
+  setPendingList(updatedFriendList)
+})
+  },[socket, pendingFriendList , notificationCount ])
+
+
 
   return (
     <AnimatePresence>
@@ -78,28 +143,27 @@ export const NotificationModal = ({
                 <h3 className={`text-lg font-semibold mb-4 ${isDarkTheme ? "text-white" : "text-gray-800"}`}>
                   Pending Requests
                 </h3>
-                {pendingRequests.length === 0 ? (
+                {filteredList.length === 0 ? (
                   <p className={`text-center py-4 ${isDarkTheme ? "text-gray-400" : "text-gray-600"}`}>
                     No pending requests
                   </p>
                 ) : (
                   <div className="space-y-4">
-                    {pendingRequests.map(request => (
+                    {filteredList.map(request => (
                       <motion.div
-                        key={request.id}
+                        key={request._id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         className={`p-4 rounded-lg ${isDarkTheme ? "bg-gray-700" : "bg-gray-50"}`}
                       >
                         <div className="flex items-center space-x-4">
                           <img
-                            src={request.sender.profilePic}
-                            alt={request.sender.name}
+                            src={request.senderInfo.profilePic}
                             className="w-10 h-10 rounded-full object-cover"
                           />
                           <div className="flex-1">
                             <p className={`font-medium ${isDarkTheme ? "text-white" : "text-gray-800"}`}>
-                              {request.sender.name}
+                              {request.senderInfo.fullName}
                             </p>
                             <p className={`text-sm ${isDarkTheme ? "text-gray-300" : "text-gray-600"}`}>
                               Sent you a friend request
@@ -107,13 +171,13 @@ export const NotificationModal = ({
                           </div>
                           <div className="flex space-x-2">
                             <button
-                              onClick={() => handleAcceptRequest(request.id)}
+                              onClick={() => handleAcceptRequest(request)}
                               className="px-3 py-1 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
                             >
                               Accept
                             </button>
                             <button
-                              onClick={() => handleRejectRequest(request.id)}
+                              onClick={() => handleRejectRequest( request)}
                               className="px-3 py-1 bg-gray-500 text-white rounded-full hover:bg-gray-600 transition-colors"
                             >
                               Reject

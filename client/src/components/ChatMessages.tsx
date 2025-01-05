@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useChatStore } from '../store/useStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Message } from './ChatWindow';
+import { useRef } from 'react';
 
 interface MessageProp{
   message:Message,
@@ -10,6 +11,7 @@ interface MessageProp{
 const ChatMessages = ({ message } : MessageProp) => {
   const { isDarkTheme } = useTheme();
   const { selectedUser } = useChatStore();
+
   
   
   const isOwnMessage = message.senderId === localStorage.getItem('userId');

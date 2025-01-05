@@ -15,10 +15,12 @@ import useFriendStore from "@/store/useFriendStore";
 export const ChatSidebar = () => {
   const { isDarkTheme } = useTheme();
   const socket = useSocket();
-  const {onlineUsers} = useChatStore()
+  const {onlineUsers, setIsUserTyping } = useChatStore()
+  const [isUserSideBarFetched , setIsUserSidebarFetched] = useState<boolean>(false)
   const {
     getUsers,
     getUserSideBar,
+    setUserSidebar,
     isUsersSidebarLoading,
     users,
     userSidebar,
@@ -70,6 +72,8 @@ export const ChatSidebar = () => {
     const fetchUsers = async () => {
       try {
         await getUserSideBar();
+        setIsUserSidebarFetched(true)
+       
       } catch (error: any) {
         toast.error(error.response.data.message);
       }
@@ -78,12 +82,48 @@ export const ChatSidebar = () => {
   }, []);
 
   useEffect(() => {
+    const handleTyping = (data: {
+      type: string;
+      payload: {
+        senderId: string;
+        receiverId: string;
+        isTyping: boolean;
+      };
+    }) => {
+      console.log("Typing event received:", data);
+      console.log("is typing", data.payload.isTyping);
+      setIsUserTyping(data.payload);
+    };
+
+    socket?.on("typing", handleTyping);
+
+    return () => {
+      socket?.off("typing", handleTyping);
+    };
+  }, [socket]);
+
+  useEffect(()=>{
+    if(!isUserSideBarFetched) return 
     console.log("use effect chat sidebar ")
     socket?.on(Events.FRIEND_REQUEST_SENT, (data) => {
-      setNotificationCount(notificationCount + 1);
       console.log("frined request sent data",data);
+      setNotificationCount(notificationCount + 1);
     });
-  }, [socket, notificationCount]);
+    socket?.on(Events.FRIEND_REQUEST_ACCEPTED , (data)=>{
+      console.log("thsi si the frined request accepted event",data)
+      const updatedfriends = userSidebar.friends
+      console.log( "updated Frieds" , updatedfriends)
+      const addedFriend = {
+        ...userSidebar,
+        friends : [...updatedfriends, 
+          data.payload.receiverInfo
+
+        ]
+      }
+      console.log("sidebar users added new thru socket" , addedFriend)
+      setUserSidebar(addedFriend)
+    });
+  }, [socket, notificationCount , userSidebar])
 
   function handleClick() {}
 
@@ -159,6 +199,7 @@ export const ChatSidebar = () => {
         isDarkTheme={isDarkTheme}
         notificationCount={notificationCountRef}
         users={users || []}
+
       />
 
       <NotificationModal

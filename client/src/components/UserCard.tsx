@@ -1,13 +1,17 @@
 import { useTheme } from "@/contexts/ThemeContext";
 import { useChatStore } from "@/store/useStore";
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 
 const UserCard = ({chat}:any) => {
     const {isDarkTheme} = useTheme()
     const {setSelectedUser , selectedUser} = useChatStore()
     const isSelected = selectedUser?._id === chat._id
     const {onlineUsers , isUserTyping } = useChatStore()
-  
+  useEffect(()=>{
+    console.log("is user tping", isUserTyping)
+
+  },[])
   return (
     <motion.div
     onClick={() => setSelectedUser(chat)} 
