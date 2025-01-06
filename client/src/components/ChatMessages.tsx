@@ -2,18 +2,15 @@ import { motion } from 'framer-motion';
 import { useChatStore } from '../store/useStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Message } from './ChatWindow';
-import { useRef } from 'react';
+import MediaGallery from './modals/MediaGallery';
 
-interface MessageProp{
-  message:Message,
+interface MessageProp {
+  message: Message,
 }
 
-const ChatMessages = ({ message } : MessageProp) => {
+const ChatMessages = ({ message }: MessageProp) => {
   const { isDarkTheme } = useTheme();
   const { selectedUser } = useChatStore();
-
-  
-  
   const isOwnMessage = message.senderId === localStorage.getItem('userId');
 
   const formatTime = (dateString: string) => {
@@ -25,20 +22,12 @@ const ChatMessages = ({ message } : MessageProp) => {
   };
 
   return (
-    <div
-      className={`flex flex-col gap-4 p-4 transition-colors duration-300 ${
-        isDarkTheme ? 'bg-gray-900' : 'bg-gray-50'
-      }`}
-    >
-      <div
-        className={`flex items-end gap-2 ${
-          isOwnMessage ? 'justify-end' : 'justify-start'
-        }`}
-      >
+    <div className={`mb-4 ${isOwnMessage ? 'flex justify-end' : 'flex justify-start'}`}>
+      <div className="flex items-end gap-2 max-w-[70%]">
         {!isOwnMessage && (
           <img
             src={selectedUser?.profilePic}
-            className="w-8 h-8 rounded-full object-cover"
+            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
             alt="User avatar"
           />
         )}
@@ -46,8 +35,8 @@ const ChatMessages = ({ message } : MessageProp) => {
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className={`max-w-[70%] rounded-lg p-3 transition-colors duration-300 ${
-            (isOwnMessage&& message)
+          className={`rounded-lg p-3 transition-colors duration-300 ${
+            isOwnMessage
               ? 'bg-green-700 text-white'
               : isDarkTheme
               ? 'bg-gray-800 text-white'
@@ -55,18 +44,11 @@ const ChatMessages = ({ message } : MessageProp) => {
           }`}
         >
           {message.image && message.image.length > 0 && message.image[0] !== '' && (
-            <div className="mb-2 space-y-2">
-              {message.image.map((img, index) => (
-                <img
-                  key={index}
-                  src={img}
-                  alt={`Message attachment ${index + 1}`}
-                  className="rounded-lg max-w-full h-auto"
-                />
-              ))}
+            <div className="mb-2">
+              <MediaGallery media={message.image} isDarkTheme={isDarkTheme} />
             </div>
           )}
-          
+
           {message?.text && (
             <p className="break-words">{message.text}</p>
           )}

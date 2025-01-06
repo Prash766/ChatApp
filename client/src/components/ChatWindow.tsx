@@ -252,7 +252,7 @@ const ChatWindow = () => {
   };
 
   return (
-    <div ref={chatWindowRef} className="flex-1 flex flex-col h-[calc(100vh-64px)] mt-16">
+    <div ref={chatWindowRef} className="flex-1 flex flex-col h-[calc(100vh-64px)]  mt-16">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
