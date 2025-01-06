@@ -3,7 +3,9 @@ import fs from 'fs'
 
 const uploadCloudinary = async(filePath : string)=>{
 try {
-        const res = await cloudinary.uploader.upload(filePath)
+        const res = await cloudinary.uploader.upload(filePath , {
+            resource_type: 'auto'
+        })
         console.log(res.secure_url)
         fs.unlinkSync(filePath)
         return res.secure_url
