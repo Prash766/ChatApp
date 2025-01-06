@@ -121,7 +121,11 @@ export const useChatStore = create<ChatStoreType>((set, get) => ({
     let toast_id;
     console.log("message data",messageData)
     for(let [key , value] of messageData.entries()){
-      if(get().isMessageSending && (value instanceof File || value instanceof FileList)) { toast_id = toast.loading("Sending Message")}
+      if(get().isMessageSending && (value instanceof File || value instanceof FileList)) { 
+        toast_id = toast.loading("Sending Message")
+        break;
+
+      }
 
     }
     const { messages, selectedUser } = get();
@@ -139,6 +143,7 @@ export const useChatStore = create<ChatStoreType>((set, get) => ({
 
             toast.success("Message Sent")
             toast.dismiss(toast_id)
+            break;
           }
         }
       }

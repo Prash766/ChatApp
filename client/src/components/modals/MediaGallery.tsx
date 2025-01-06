@@ -27,14 +27,14 @@ export default function MediaGallery({ media, isDarkTheme }: MediaGalleryProps) 
               <video 
                 src={media[0]} 
                 controls
-                className="w-full h-full object-cover rounded-lg"
+                className="w-full h-full object-cover rounded-lg border border-gray-300"
                 style={{ maxHeight: '400px', minHeight: '200px' }}
               />
             ) : (
               <img 
                 src={media[0]} 
                 alt="Single media" 
-                className="w-full h-full object-cover rounded-lg"
+                className="w-full h-full object-cover rounded-lg border border-gray-300"
                 style={{ maxHeight: '400px', minHeight: '200px' }}
               />
             )}
@@ -56,13 +56,13 @@ export default function MediaGallery({ media, isDarkTheme }: MediaGalleryProps) 
                 <video 
                   src={item} 
                   controls
-                  className="w-full h-full object-cover rounded-lg"
+                  className="w-full h-full object-cover rounded-lg border border-gray-300"
                 />
               ) : (
                 <img 
                   src={item} 
                   alt={`Media ${index + 1}`} 
-                  className="w-full h-full object-cover rounded-lg"
+                  className="w-full h-full object-cover rounded-lg border border-gray-300"
                 />
               )}
             </div>
@@ -82,13 +82,13 @@ export default function MediaGallery({ media, isDarkTheme }: MediaGalleryProps) 
               <video 
                 src={media[0]} 
                 controls
-                className="w-full h-full object-cover rounded-lg"
+                className="w-full h-full object-cover rounded-lg border border-gray-300"
               />
             ) : (
               <img 
                 src={media[0]} 
                 alt="Media 1" 
-                className="w-full h-full object-cover rounded-lg"
+                className="w-full h-full object-cover rounded-lg border border-gray-300"
               />
             )}
           </div>
@@ -103,13 +103,13 @@ export default function MediaGallery({ media, isDarkTheme }: MediaGalleryProps) 
                   <video 
                     src={item} 
                     controls
-                    className="w-full h-full object-cover rounded-lg"
+                    className="w-full h-full object-cover rounded-lg border border-gray-300"
                   />
                 ) : (
                   <img 
                     src={item} 
                     alt={`Media ${index + 2}`} 
-                    className="w-full h-full object-cover rounded-lg"
+                    className="w-full h-full object-cover rounded-lg border border-gray-300"
                   />
                 )}
               </div>
@@ -132,17 +132,17 @@ export default function MediaGallery({ media, isDarkTheme }: MediaGalleryProps) 
               <video 
                 src={item} 
                 controls
-                className="w-full h-full object-cover rounded-lg"
+                className="w-full h-full object-cover rounded-lg border border-gray-300"
               />
             ) : (
               <img 
                 src={item} 
                 alt={`Media ${index + 1}`} 
-                className="w-full h-full object-cover rounded-lg"
+                className="w-full h-full object-cover rounded-lg border border-gray-300"
               />
             )}
             {index === 3 && mediaCount > 4 && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg border border-gray-300">
                 <span className="text-white text-2xl font-bold">+{mediaCount - 4}</span>
               </div>
             )}
@@ -171,13 +171,13 @@ export default function MediaGallery({ media, isDarkTheme }: MediaGalleryProps) 
                       <video
                         src={item}
                         controls
-                        className="max-w-full max-h-[80vh] object-contain rounded-lg"
+                        className="max-w-full max-h-[80vh] object-contain rounded-lg border border-gray-300"
                       />
                     ) : (
                       <img
                         src={item}
                         alt={`Media ${index + 1}`}
-                        className="max-w-full max-h-[80vh] object-contain rounded-lg"
+                        className="max-w-full max-h-[80vh] object-contain rounded-lg border border-gray-300"
                       />
                     )}
                   </div>
