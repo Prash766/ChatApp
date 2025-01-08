@@ -6,10 +6,8 @@ import { ThemeContextProvider } from './contexts/ThemeContext.tsx'
 import { Toaster } from 'sonner'
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
       <ThemeContextProvider>
 <Toaster richColors position='top-right'/>
     <App />
       </ThemeContextProvider>
-   </StrictMode>,
 )

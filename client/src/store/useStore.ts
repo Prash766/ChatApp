@@ -20,9 +20,11 @@ interface ChatStoreType {
   isUserTyping : Payload | null
   nextCursor : string
   hasMore : boolean
+  hasMoreMessages : boolean
   onlineUsers: any[];
   isMessageSending : boolean;
   isUsersSidebarLoading : boolean
+  getMessagesNextCursor : string,
   userSidebar : FriendsType 
   setUserSidebar : (sidebarUsers: FriendsType )=> void
   setUsers: (newUsers: any[]) => void
@@ -41,7 +43,9 @@ export const useChatStore = create<ChatStoreType>((set, get) => ({
   messages: [],
   users: [],
   hasMore: true,
+  hasMoreMessages : true,
   nextCursor : "",
+  getMessagesNextCursor : "",
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
@@ -106,8 +110,11 @@ export const useChatStore = create<ChatStoreType>((set, get) => ({
   getMessages: async (userId: string) => {
     set({ isMessagesLoading: true });
     try {
-      const res = await axiosClient.get(`/messages/${userId}`);
-      set({ messages: res.data.messages });
+      const res = await axiosClient.get(`/messages/${userId}?cursor=${get().getMessagesNextCursor}`);
+      console.log("HAS MORE",res.data.hasMore)
+      set({ messages: [...res.data.messages ,...get().messages] });
+      set({getMessagesNextCursor : res.data.cursor})
+      set({hasMoreMessages : res.data.hasMore})
       return res
     } catch (error: any) {
       toast.error(error.response.data.message);
