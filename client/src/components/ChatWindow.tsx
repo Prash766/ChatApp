@@ -21,6 +21,7 @@ import { useSocket } from "@/contexts/SocketContext";
 import { Socket } from "socket.io-client";
 import TypingIndicator from "./TypingIndicator";
 import ScrollToBottom from "./ScrollToBottom";
+import { MessagesSkeleton } from "./MessagesSkeleton";
 
 export interface Message {
   _id: string;
@@ -92,7 +93,7 @@ const ChatWindow = () => {
   
     setIsScrollAtBottom(!isAtBottom());
   
-    if (scrollTop <= SCROLL_TOP_THRESHOLD && !isLoadingMore && hasMoreMessages) {
+    if (scrollTop <= SCROLL_TOP_THRESHOLD && !isLoadingMore && useChatStore.getState().hasMoreMessages) {
       setIsLoadingMore(true);
       setPrevScrollHeight(scrollHeight);
 
@@ -141,7 +142,7 @@ const ChatWindow = () => {
   }, []);
 
   useEffect(() => {
-    if (messages?.length && isAtBottom()) {
+    if (messages?.length) {
       endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, []);
@@ -344,10 +345,11 @@ const ChatWindow = () => {
           </div>
         )}
 
-        {/* Messages */}
-        {messages?.map((message: Message) => (
+        {
+        (messages?.map((message: Message) => (
           <ChatMessages key={message._id} message={message} />
-        ))}
+        )))
+        }
 
         {/* Typing indicator */}
         {isUserTyping?.isTyping && 
