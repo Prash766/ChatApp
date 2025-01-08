@@ -166,29 +166,57 @@ const getUsersSideBar = asyncHandler(async(req , res)=>{
   }
 })
 
-const getMessages = asyncHandler(async(req , res, next)=>{
-   try {
-    const {id} = req.params
-    const sender_id = req.user
-    const messages = await Message.find({
-        $or:[
-            {senderId  : sender_id , receiverId:id},
-            {senderId : id ,receiverId : sender_id}
-        ]
-    })
-    return res.status(200).json({
-        success:true,
-        messages
-    })
-    
-   } catch (error) {
-    console.log("Error fetching Messages", error)
-    return res.status(500).json({
-        message:"INternal Server Error"
-    })
-   }
-})
 
+const getMessages = asyncHandler(async (req, res, next) => {
+  try {
+    const { id } = req.params; 
+    const sender_id = req.user
+    const cursor = req.query.cursor
+    const limit = 10;
+
+    const paginatedResult = cursor
+      ? { _id: { $lt: new mongoose.Types.ObjectId(cursor as string) } }
+      : {};
+
+    const messages = await Message.aggregate([
+      {
+        $match: {
+          $or: [
+            { senderId: new mongoose.Types.ObjectId(sender_id), receiverId:new mongoose.Types.ObjectId(id) },
+            { senderId: new mongoose.Types.ObjectId(id), receiverId: new mongoose.Types.ObjectId(sender_id) }
+          ],
+          ...paginatedResult,
+        },
+      },
+      {
+        $sort: { createdAt: -1 }, 
+      },
+      {
+        $limit: limit + 1, 
+      },
+    ]);
+    const hasMore = messages.length > limit;
+    if (hasMore) {
+      messages.pop()
+    }
+    const nextCursor = hasMore ? messages[messages.length - 1]._id : null;
+    const orderedMessages = messages.reverse();
+
+    return res.status(200).json({
+      success: true,
+      messages: orderedMessages,
+      hasMore,
+      cursor: nextCursor,
+    });
+  } catch (error: any) {
+    console.error("Error fetching Messages:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
 const sendMessages = asyncHandler(async (req, res) => {
     try {
       const { id } = req.params
