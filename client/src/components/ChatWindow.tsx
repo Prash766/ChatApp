@@ -6,7 +6,6 @@ import {
   Image as ImageIcon,
   Video as VideoIcon,
   Smile,
-  User,
   Loader2,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -43,9 +42,6 @@ const ChatWindow = () => {
   const {
     getMessages,
     messages,
-    isMessagesLoading,
-    isMessageSending,
-    hasMoreMessages,
     subscribeToMessages,
     unsubscribeFromMessages,
     selectedUser,
@@ -68,9 +64,9 @@ const ChatWindow = () => {
   const [receiverId, setReceiverID] = useState<string>("");
   const [isScrollAtBottom, setIsScrollAtBottom] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [prevScrollHeight, setPrevScrollHeight] = useState(0);
-  const SCROLL_THRESHOLD = 100; // Distance from bottom to trigger scroll button
-  const SCROLL_TOP_THRESHOLD = 50; // Distance from top to load more messages
+  const [IsfirstMessageFetch , setIsFirstMessageFetch] = useState<boolean>(false)
+  const SCROLL_THRESHOLD = 100
+  const SCROLL_TOP_THRESHOLD = 50
 
   // Check if the scroll position is near the bottom
   const isAtBottom = () => {
@@ -89,13 +85,12 @@ const ChatWindow = () => {
     if (!messagesContainerRef.current) return;
   
     const container = messagesContainerRef.current;
-    const { scrollTop, scrollHeight, clientHeight } = container;
+    const { scrollTop, scrollHeight } = container;
   
     setIsScrollAtBottom(!isAtBottom());
   
     if (scrollTop <= SCROLL_TOP_THRESHOLD && !isLoadingMore && useChatStore.getState().hasMoreMessages) {
       setIsLoadingMore(true);
-      setPrevScrollHeight(scrollHeight);
 
   
       if (selectedUser?._id) {
@@ -118,8 +113,16 @@ const ChatWindow = () => {
   useEffect(() => {
     const initializeChat = async () => {
       if (selectedUser?._id) {
-        const res = await getMessages(selectedUser._id);
-        setReceiverID(selectedUser._id);
+setIsFirstMessageFetch(true)
+        try {
+      await getMessages(selectedUser._id);
+          setReceiverID(selectedUser._id);
+        } catch (error) {
+          
+        }
+        finally{
+          setIsFirstMessageFetch(false)
+        }
       }
     };
 
@@ -142,10 +145,10 @@ const ChatWindow = () => {
   }, []);
 
   useEffect(() => {
-    if (messages?.length) {
+    if(IsfirstMessageFetch) return ;
       endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, []);
+    
+  }, [IsfirstMessageFetch]);
   const handleDroppedFiles = (droppedFiles: File[]) => {
     const fileArray: File[] = [];
     droppedFiles.forEach((file) => {
@@ -162,7 +165,7 @@ const ChatWindow = () => {
   };
 
   // Handle file upload via drag and drop
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps,  isDragActive } = useDropzone({
     accept: {
       "image/*": [".jpg", ".jpeg", ".png", ".gif"],
       "video/*": [".mp4", ".webm"],
@@ -209,12 +212,12 @@ const ChatWindow = () => {
   // Remove uploaded media
   const removeImage = (index: number) => {
     setImageUrls((prev) => prev.filter((_, i) => i !== index));
-    setFiles((prev) => prev.filter((file, i) => i !== index));
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const removeVideo = (index: number) => {
     setVideos((prev) => prev.filter((_, i) => i !== index));
-    setFiles((prev) => prev.filter((file, i) => i !== index));
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   // Send message handler
@@ -345,11 +348,13 @@ const ChatWindow = () => {
           </div>
         )}
 
-        {
-        (messages?.map((message: Message) => (
+      {IsfirstMessageFetch ? (
+        <MessagesSkeleton />
+      ) : (
+        messages?.map((message: Message) => (
           <ChatMessages key={message._id} message={message} />
-        )))
-        }
+        ))
+      )}
 
         {/* Typing indicator */}
         {isUserTyping?.isTyping && 
