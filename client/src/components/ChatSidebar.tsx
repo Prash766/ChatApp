@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { MessageSquare, Users, Bell, Moon, Sun, UserPlus2 } from "lucide-react";
+import { MessageSquare, Users, Bell,  UserPlus2 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import UserCard from "./UserCard";
 import { useEffect, useRef, useState } from "react";
@@ -15,10 +15,9 @@ import useFriendStore from "@/store/useFriendStore";
 export const ChatSidebar = () => {
   const { isDarkTheme } = useTheme();
   const socket = useSocket();
-  const {onlineUsers, setIsUserTyping } = useChatStore()
+  const { setIsUserTyping } = useChatStore()
   const [isUserSideBarFetched , setIsUserSidebarFetched] = useState<boolean>(false)
   const {
-    getUsers,
     getUserSideBar,
     setUserSidebar,
     isUsersSidebarLoading,
@@ -125,7 +124,6 @@ export const ChatSidebar = () => {
     });
   }, [socket, notificationCount , userSidebar])
 
-  function handleClick() {}
 
   return (
     <>
@@ -190,7 +188,7 @@ export const ChatSidebar = () => {
             : userSidebar.friends?.map((chat) => (
                 <UserCard key={chat._id} chat={chat} />
               ))}
-        </div>
+        </div>  
       </motion.div>
 
       <UserListModal

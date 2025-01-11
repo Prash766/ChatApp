@@ -29,7 +29,7 @@ interface UserListModalProps {
   isOpen: boolean;
   onClose: () => void;
   isDarkTheme: boolean;
-  notificationCount: number;
+  notificationCount: any;
   users: User[];
 }
 
@@ -38,7 +38,6 @@ export const UserListModal = ({
   onClose,
   isDarkTheme,
   users,
-  notificationCount,
 }: UserListModalProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const loaderRef = useRef<HTMLDivElement>(null);

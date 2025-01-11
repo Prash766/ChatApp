@@ -19,7 +19,7 @@ export const VideoModal = ({ videoUrl, isOpen, onClose }: VideoModalProps) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-2"
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
@@ -30,14 +30,14 @@ export const VideoModal = ({ videoUrl, isOpen, onClose }: VideoModalProps) => {
               isDarkTheme ? 'bg-gray-900' : 'bg-white'
             }`}
           >
-            <div className="absolute top-4 right-4 z-10">
+            <div className="absolute   top-4 right-4 z-10">
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={onClose}
-                className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                className="p-1 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
               >
-                <X className="w-6 h-6" />
+                <X size={10} className="w-6 h-6" />
               </motion.button>
             </div>
             <video

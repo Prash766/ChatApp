@@ -3,6 +3,7 @@ import { useChatStore } from '../store/useStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Message } from './ChatWindow';
 import MediaGallery from './modals/MediaGallery';
+import { formatDate } from 'date-fns';
 
 interface MessageProp {
   message: Message,
@@ -58,7 +59,7 @@ const ChatMessages = ({ message }: MessageProp) => {
               isOwnMessage ? 'text-green-100' : 'text-gray-500'
             }`}
           >
-            {formatTime(message?.createdAt)}
+            {formatDate(new Date(message?.createdAt), 'PPpp')}
           </span>
         </motion.div>
       </div>

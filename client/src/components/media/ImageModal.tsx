@@ -1,7 +1,6 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { useTheme } from "@/contexts/ThemeContext";
 
 interface ImageModalProps {
   imageUrlArray: string[];
@@ -12,7 +11,6 @@ interface ImageModalProps {
 
 const ImageModal = ({ imageUrlArray, selectedImage, isOpen, onClose }: ImageModalProps) => {
   const [currentIndex, setCurrentIndex] = useState(selectedImage);
-  const { isDarkTheme } = useTheme();
 
   useEffect(() => {
     setCurrentIndex(selectedImage);
@@ -64,7 +62,7 @@ const ImageModal = ({ imageUrlArray, selectedImage, isOpen, onClose }: ImageModa
             onClick={onClose}
             className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
           >
-            <X className="w-6 h-6" />
+            <X  className="w-6 h-6" />
           </button>
           <button
             onClick={handlePrevious}
@@ -98,7 +96,7 @@ const ImageModal = ({ imageUrlArray, selectedImage, isOpen, onClose }: ImageModa
             exit={{ opacity: 0, x: -20 }}
             src={imageUrlArray[currentIndex]}
             alt={`Image ${currentIndex + 1}`}
-            className="max-h-[90vh] max-w-full object-contain rounded-lg"
+            className="max-h-[90vh] max-w-full   object-contain rounded-lg"
           />
 
           {/* Image counter */}

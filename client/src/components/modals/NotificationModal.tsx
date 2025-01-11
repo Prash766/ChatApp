@@ -4,27 +4,25 @@ import { format } from "date-fns";
 import { useEffect } from "react";
 import useFriendStore, { PendingFriend } from "@/store/useFriendStore";
 import { useChatStore } from "@/store/useStore";
-import { FriendsType } from "@/store/useAuthStore";
 import { useSocket } from "@/contexts/SocketContext";
 import { Events } from "@/constants/events";
 
-interface Notification {
-  id: string;
-  type: "friend_request" | "friend_accepted" | "message";
-  content: string;
-  timestamp: Date;
-  sender: {
-    name: string;
-    profilePic: string;
-  };
-}
+// interface Notification {
+//   id: string;
+//   type: "friend_request" | "friend_accepted" | "message";
+//   content: string;
+//   timestamp: Date;
+//   sender: {
+//     name: string;
+//     profilePic: string;
+//   };
+// }
 
 interface NotificationModalProps {
   isOpen: boolean;
   onClose: () => void;
   isDarkTheme: boolean;
-  notifications: Notification[];
-  noitficationCount : number
+  notifications: any[];
   pendingRequests: any[];
 }
 
@@ -33,7 +31,6 @@ export const NotificationModal = ({
   onClose,
   isDarkTheme,
   notifications,
-  pendingRequests,
 }: NotificationModalProps) => {
   const {getPendingFriendList , pendingFriendList, acceptFriendRequest , rejectFriendRequest, setPendingList, notificationCount , setNotificationCount}= useFriendStore()
   const userId = localStorage.getItem("userId")
@@ -41,7 +38,7 @@ export const NotificationModal = ({
   const {userSidebar , setUserSidebar} = useChatStore()
 
   const handleAcceptRequest = async(request  : PendingFriend) => {
-    const res = await acceptFriendRequest(request._id , request.senderId)
+     await acceptFriendRequest(request._id , request.senderId)
     const friends  = userSidebar.friends
     const acceptedUser = {
       ...userSidebar,

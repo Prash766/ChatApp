@@ -149,6 +149,16 @@ setIsFirstMessageFetch(true)
       endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
     
   }, [IsfirstMessageFetch]);
+
+  useEffect(()=>{
+if(
+  !isScrollAtBottom
+){
+
+  endOfMessagesRef.current?.scrollIntoView({behavior:"smooth"})
+}
+    
+  }, [isScrollAtBottom , messages , isUserTyping?.isTyping])
   const handleDroppedFiles = (droppedFiles: File[]) => {
     const fileArray: File[] = [];
     droppedFiles.forEach((file) => {

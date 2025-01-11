@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { create } from "zustand";
 import { FriendsType, UserType } from "./useAuthStore";
 import { Socket } from "socket.io-client";
+import { Message } from "@/components/ChatWindow";
 
 
 interface Payload {
@@ -12,7 +13,7 @@ interface Payload {
 }
 
 interface ChatStoreType {
-  messages: any;
+  messages: Message[];
   users: any[];
   selectedUser: UserType | null;
   isUsersLoading: boolean;
@@ -25,7 +26,9 @@ interface ChatStoreType {
   isMessageSending : boolean;
   isUsersSidebarLoading : boolean
   getMessagesNextCursor : string,
-  userSidebar : FriendsType 
+  userSidebar : FriendsType ,
+  lastMessage : Message,
+  setLastMessage: (message : Message) => void,
   setUserSidebar : (sidebarUsers: FriendsType )=> void
   setUsers: (newUsers: any[]) => void
   setIsUserTyping:  (data : Payload)=> void
@@ -44,6 +47,7 @@ export const useChatStore = create<ChatStoreType>((set, get) => ({
   users: [],
   hasMore: true,
   hasMoreMessages : true,
+ lastMessage :{}  as Message,
   nextCursor : "",
   getMessagesNextCursor : "",
   selectedUser: null,
@@ -58,6 +62,10 @@ export const useChatStore = create<ChatStoreType>((set, get) => ({
   setUserSidebar: (sidebarUsers)=>{
     set({userSidebar : sidebarUsers})
 
+  },
+  setLastMessage: (message)=> {
+    set({lastMessage:  message})
+    
   },
 
   setUsers: (newUsers)=>{
@@ -127,7 +135,7 @@ export const useChatStore = create<ChatStoreType>((set, get) => ({
     set({isMessageSending: true})
     let toast_id;
     console.log("message data",messageData)
-    for(let [key , value] of messageData.entries()){
+    for(let [_ , value] of messageData.entries()){
       if(get().isMessageSending && (value instanceof File || value instanceof FileList)) { 
         toast_id = toast.loading("Sending Message")
         break;
@@ -145,7 +153,7 @@ export const useChatStore = create<ChatStoreType>((set, get) => ({
       console.log( "messages" , messages)
       if(res.status===200){
         set({isMessageSending:false})
-        for(let [key , value] of messageData.entries()){
+        for(let [_ , value] of messageData.entries()){
           if(value instanceof File || value instanceof FileList){
 
             toast.success("Message Sent")
