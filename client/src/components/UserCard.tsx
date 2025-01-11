@@ -88,10 +88,10 @@ const UserCard = ({ chat }: any) => {
                 </>
               )
             ) : (
-              <>
+              <span >
                 <Image /> <span>&nbsp;</span>
                 <span>Photo</span>
-              </>
+              </span>
             )
           ) : (
             <>

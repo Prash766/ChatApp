@@ -16,7 +16,9 @@
   "version": "1.0.0",
   "main": "./src/index.ts",
   "scripts": {
-    "dev": "nodemon"
+    "dev": "nodemon",
+    "build":"npx tsc -b ",
+    "run":"node ./dist/index.js"
   },
   "keywords": [],
   "author": "",
