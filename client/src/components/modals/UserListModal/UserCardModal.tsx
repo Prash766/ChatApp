@@ -4,7 +4,6 @@ import { User } from "./UserListModal";
 import useFriendStore from "@/store/useFriendStore";
 import { toast } from "sonner";
 import { useState } from "react";
-import { useSocket } from "@/contexts/SocketContext";
 
 interface UserCardProps {
   user: User;
@@ -17,7 +16,6 @@ export const UserCardModal = ({
 }: UserCardProps) => {
   const { sendFriendRequest, setFriendRequestReceiver } = useFriendStore();
   const [isRequestSent, setIsRequestSent] = useState(false);
-  const socket = useSocket();
 
   async function handleFriendRequest() {
     try {
