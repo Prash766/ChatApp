@@ -14,6 +14,12 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+app.get("/", (req, res)=>{
+  res.json({
+    message :"Hello To Chat App"
+  })
+})
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
