@@ -22,7 +22,7 @@ export const SocketProvider = ({ children }: PropsChildren) => {
       return;
     }
 
-    const socketInstance = io("http://localhost:3000", {
+    const socketInstance = io(`${import.meta.env.VITE_BACKEND_URL}`, {
       reconnection: true,
       query: {
         userId,
