@@ -7,9 +7,9 @@ interface MediaGalleryProps {
   isDarkTheme: boolean
 }
 
-export default function MediaGallery({ media, isDarkTheme }: MediaGalleryProps) {
+export default function MediaGallery({ media }: MediaGalleryProps) {
   const [isCarouselOpen, setIsCarouselOpen] = useState(false)
-  const [currentMediaIndex, setCurrentMediaIndex] = useState(0)
+  const [_, setCurrentMediaIndex] = useState(0)
 
   const openCarousel = (index: number) => {
     setCurrentMediaIndex(index)

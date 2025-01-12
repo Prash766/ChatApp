@@ -14,14 +14,6 @@ const ChatMessages = ({ message }: MessageProp) => {
   const { selectedUser } = useChatStore();
   const isOwnMessage = message.senderId === localStorage.getItem('userId');
 
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
-  };
-
   return (
     <div className={`mb-4 ${isOwnMessage ? 'flex justify-end' : 'flex justify-start'}`}>
       <div className="flex items-end gap-2 max-w-[70%]">
