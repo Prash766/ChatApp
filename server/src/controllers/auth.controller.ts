@@ -57,7 +57,7 @@ const signUpUser = asyncHandler(async (req, res, next) => {
     const { fullName, email, password } = req.body;
     let profilePic = "";
     const profileImage = (req.file as Express.Multer.File) || null;
-    if (profileImage.path) {
+    if (profileImage?.path) {
       const res = (await uploadCloudinary(profileImage.path)) as string;
       profilePic = res;
     }

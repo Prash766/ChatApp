@@ -75,7 +75,7 @@ const useAuthStore = create<AuthStore>((set) => ({
       }
       set({ isAuthenticated: true, authUser: res.data.user });
     } catch (error) {
-      console.error("Authentication failed:", error);
+      // console.error("Authentication failed:", error);
       set({ isAuthenticated: false });
     } finally {
       set({ isLoading: false });
@@ -159,7 +159,6 @@ try {
         return res
 } catch (error:any) {
     console.log(error)
-    toast.error(`${error.message|| "Profile Upload Failed"}`)
     
 }
     

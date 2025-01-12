@@ -16,8 +16,9 @@ const ChatPage = () => {
 
     useEffect(()=>{
       socket?.on("getOnlineUsers" ,(data)=>{
-        console.log("online users",data )
+        console.log("online users received from the backend",data )
       })
+      console.log("onkine users",onlineUsers)
       
   
     }, [socket , onlineUsers , setOnlineUsers])

@@ -21,13 +21,16 @@ export const SocketProvider = ({ children }: PropsChildren) => {
       // console.warn("No userId found, socket connection will not be established.");
       return;
     }
+    const socketUrl = import.meta.env.VITE_SOCKET_URL as string;
 
-    const socketInstance = io(`${import.meta.env.VITE_BACKEND_URL}`, {
+
+    const socketInstance = io(socketUrl, {
       reconnection: true,
       query: {
         userId,
       },
       reconnectionAttempts: 5,
+      transports: ['websocket']
     });
 
     setSocket(socketInstance);
