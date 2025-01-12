@@ -10,6 +10,12 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_SECRET_KEY,
 });
 
+app.get("/", (req, res)=>{
+  res.json({
+    message :"Hello To Chat App"
+  })
+})
+
 import userRoutes from "./routes/auth.routes";
 import messageRouter from "./routes/messages.routes";
 import FriendRouter from "./routes/friend.routes"
