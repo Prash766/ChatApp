@@ -37,7 +37,7 @@ const loginUser = asyncHandler(async (req, res, next) => {
     res.cookie("auth-token", token, options);
     return res.status(200).json({ 
         message: "Login successful" ,
-        user_id: user._id
+        user : user
     });
   } catch (error) {
     next(error);

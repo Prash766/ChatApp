@@ -21,7 +21,7 @@ export const Login = () => {
     try {
       const res = await loginUser(data);
 if (res?.status===200) {
-        setUserId(res?.data.user_id)
+        setUserId(res?.data.user._id)
         navigate("/chat", { replace: true });
       }
     } catch (error: any) {

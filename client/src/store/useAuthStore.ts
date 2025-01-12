@@ -31,9 +31,11 @@ interface AuthStore {
   isSigningUp: boolean;
   isLoading: boolean;
   isSignedUp: boolean;
+  userInfoLoading : boolean
   isUploading : boolean
   authUser: UserType | null;
   userId: string;
+  setUserInfoLoading: (isLoading : boolean) => void
   setUserId: (userId: string) => void;
   authenticateUser: () => Promise<any>;
   loginUser: (data: Login) => Promise<any>;
@@ -53,12 +55,16 @@ const useAuthStore = create<AuthStore>((set) => ({
     createdAt: "",
   },
   userId: "",
+  userInfoLoading : false,
   isUploading: false,
   isLoggedIn: false,
   isSignedUp: false,
   isLoading: true,
   isSigningUp: false,
   isLoggingIn: false,
+  setUserInfoLoading : (isLoading : boolean) =>{
+    set({userInfoLoading : isLoading})
+  },
   authenticateUser: async () => {
     set({ isLoading: true });
     try {
@@ -94,6 +100,7 @@ const useAuthStore = create<AuthStore>((set) => ({
       set({ isLoggingIn: false });
     }
   },
+
   signUpUser: async (data: FormData) => {
     set({ isSigningUp: true });
     try {

@@ -6,6 +6,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { format } from "date-fns";
 import { useAuthStore } from "@/store/useAuthStore";
 import { toast } from "sonner";
+import { useChatStore } from "@/store/useStore";
 
 
 export const ProfilePage = () => {
@@ -13,6 +14,7 @@ export const ProfilePage = () => {
   const [avatar, setAvatar] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
   const { updateProfile , getUserInfo, authUser , isUploading} = useAuthStore();
+  const {onlineUsers} = useChatStore()
 console.log(authUser)
   useEffect(()=>{ 
   const userInfo= async()=>{
@@ -188,10 +190,10 @@ console.log(authUser)
             >
               Status
             </label>
-            {/* <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <div
                 className={`w-3 h-3 rounded-full ${
-                  authUser.status === "online" ? "bg-green-500" : "bg-gray-500"
+                  onlineUsers.includes(authUser?._id) ? "bg-green-500" : "bg-gray-500"
                 }`}
               />
               <p
@@ -199,9 +201,9 @@ console.log(authUser)
                   isDarkTheme ? "text-gray-300" : "text-gray-700"
                 }`}
               >
-                {authUser.status}
+                {onlineUsers.includes(authUser?._id) ? "Online": "Offline"}
               </p>
-            </div> */}
+            </div>
           </div>
         </div>
 
