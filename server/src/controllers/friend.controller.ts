@@ -85,21 +85,25 @@ const sendRequest = asyncHandler(async (req, res) => {
       senderId: req.user,
       receiverId: receiverId,
     }).select("-password");
+    console.log("is request sent",isRequestExist)
     if (isRequestExist) {
-      const coolDownTimeExpired =
-        Date.now() > new Date(isRequestExist.cooldown).getTime();
-      const updateRequest = await FriendRequest.findByIdAndUpdate(
-        isRequestExist._id,
-        {
-          $set: { cooldown: null },
-        }
-      );
-      if (!coolDownTimeExpired) {
+      const cooldownTIme = isRequestExist.cooldown
+      if(cooldownTIme===null){
         return res.status(400).json({
           success: false,
           message: "You have to wait before sending another request.",
         });
       }
+      const coolDownTimeExpired =
+        Date.now() > new Date(isRequestExist.cooldown).getTime();
+        if(coolDownTimeExpired){
+          await FriendRequest.findByIdAndUpdate(
+            isRequestExist._id,
+            {
+              $set: { cooldown: null },
+            }
+          );
+        }
       return res.json({
         success: true,
         message: "Request Sent",
