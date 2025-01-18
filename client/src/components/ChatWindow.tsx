@@ -41,11 +41,12 @@ const ChatWindow = () => {
   // Chat store actions and state
   const {
     getMessages,
-    messages,
+    // messages,
     subscribeToMessages,
     unsubscribeFromMessages,
     selectedUser,
     sendMessages,
+    userChatStates,
   } = useChatStore();
 
   // File handling refs
@@ -57,46 +58,54 @@ const ChatWindow = () => {
   const chatWindowRef = useRef<HTMLDivElement>(null);
   const timeoutId = useRef<NodeJS.Timeout | null>(null);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [videos, setVideos] = useState<{ url: string; thumbnail?: string }[]>([]);
+  const [videos, setVideos] = useState<{ url: string; thumbnail?: string }[]>(
+    []
+  );
   const [files, setFiles] = useState<File[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [receiverId, setReceiverID] = useState<string>("");
   const [isScrollAtBottom, setIsScrollAtBottom] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [IsfirstMessageFetch , setIsFirstMessageFetch] = useState<boolean>(false)
-  const SCROLL_THRESHOLD = 100
-  const SCROLL_TOP_THRESHOLD = 50
+  const [IsfirstMessageFetch, setIsFirstMessageFetch] =
+    useState<boolean>(false);
+  const SCROLL_THRESHOLD = 100;
+  const SCROLL_TOP_THRESHOLD = 50;
+  const messages = selectedUser
+    ? userChatStates[selectedUser._id]?.messages || []
+    : [];
 
   // Check if the scroll position is near the bottom
   const isAtBottom = () => {
     if (messagesContainerRef.current) {
-      const { scrollHeight, scrollTop, clientHeight } = messagesContainerRef.current;
+      const { scrollHeight, scrollTop, clientHeight } =
+        messagesContainerRef.current;
       return scrollHeight - scrollTop - clientHeight < SCROLL_THRESHOLD;
     }
     return true;
   };
-  const handleScrollToBottom= ()=>{
-    endOfMessagesRef.current?.scrollIntoView({behavior:"smooth"})
-  }
-
+  const handleScrollToBottom = () => {
+    endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   const handleScroll = async () => {
     if (!messagesContainerRef.current) return;
-  
+
     const container = messagesContainerRef.current;
     const { scrollTop, scrollHeight } = container;
-  
-    setIsScrollAtBottom(!isAtBottom());
-  
-    if (scrollTop <= SCROLL_TOP_THRESHOLD && !isLoadingMore && useChatStore.getState().hasMoreMessages) {
-      setIsLoadingMore(true);
 
-  
-      if (selectedUser?._id) {
+    setIsScrollAtBottom(!isAtBottom());
+    if (
+      scrollTop <= SCROLL_TOP_THRESHOLD &&
+      !isLoadingMore &&
+      selectedUser?._id &&
+      useChatStore.getState().userChatStates[selectedUser._id]?.hasMoreMessages
+    ) {
+      setIsLoadingMore(true);
+      if (selectedUser?._id  ) {
         try {
-          await getMessages(selectedUser._id);
-            requestAnimationFrame(() => {
+      await getMessages(useChatStore.getState().selectedUser?._id as string);
+          requestAnimationFrame(() => {
             if (messagesContainerRef.current) {
               const newScrollHeight = messagesContainerRef.current.scrollHeight;
               const heightDifference = newScrollHeight - scrollHeight;
@@ -109,56 +118,61 @@ const ChatWindow = () => {
       }
     }
   };
-  
+
   useEffect(() => {
-    const initializeChat = async () => {
-      if (selectedUser?._id) {
-setIsFirstMessageFetch(true)
+    console.log("FIRST USE EFFECT")
+    if (selectedUser?._id) {
+      setIsFirstMessageFetch(true);
+      setIsLoadingMore(false);
+      setIsScrollAtBottom(true);
+
+      const initializeChat = async () => {
         try {
-      await getMessages(selectedUser._id);
+          await getMessages(selectedUser._id);
+          console.log("selected user",selectedUser._id)
           setReceiverID(selectedUser._id);
+
+          console.log("recviever id" , receiverId)
         } catch (error) {
-          
+        } finally {
+          setIsFirstMessageFetch(false);
         }
-        finally{
-          setIsFirstMessageFetch(false)
-        }
-      }
+      };
+
+      initializeChat()
+      subscribeToMessages(socket as Socket);
+
+      
+    }
+
+    return () => {
+      unsubscribeFromMessages(socket as Socket);
     };
-
-    initializeChat();
-    subscribeToMessages(socket as Socket);
-
-    return () => unsubscribeFromMessages(socket as Socket);
   }, [selectedUser, getMessages, subscribeToMessages, unsubscribeFromMessages]);
-
   useEffect(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
 
     const debouncedScroll = debounce(handleScroll, 100);
     container.addEventListener("scroll", debouncedScroll);
-    
+
     return () => {
       container.removeEventListener("scroll", debouncedScroll);
     };
   }, []);
 
   useEffect(() => {
-    if(IsfirstMessageFetch) return ;
-      endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
-    
+    if (IsfirstMessageFetch) return;
+    endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [IsfirstMessageFetch]);
 
-  useEffect(()=>{
-if(
-  !isScrollAtBottom
-){
+  useEffect(() => {
+    if (!isScrollAtBottom) {
+      endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [isScrollAtBottom, messages, isUserTyping?.isTyping]);
 
-  endOfMessagesRef.current?.scrollIntoView({behavior:"smooth"})
-}
-    
-  }, [isScrollAtBottom , messages , isUserTyping?.isTyping])
+
   const handleDroppedFiles = (droppedFiles: File[]) => {
     const fileArray: File[] = [];
     droppedFiles.forEach((file) => {
@@ -175,7 +189,7 @@ if(
   };
 
   // Handle file upload via drag and drop
-  const { getRootProps,  isDragActive } = useDropzone({
+  const { getRootProps, isDragActive } = useDropzone({
     accept: {
       "image/*": [".jpg", ".jpeg", ".png", ".gif"],
       "video/*": [".mp4", ".webm"],
@@ -186,7 +200,6 @@ if(
   });
 
   // Process dropped files
-
 
   // Handle file attachment button clicks
   const handleAttachmentClick = (type: "file" | "image" | "video") => {
@@ -232,7 +245,12 @@ if(
 
   // Send message handler
   const handleSendButton = async () => {
-    if (!message && imageUrls.length === 0 && videos.length === 0 && files.length === 0) {
+    if (
+      !message &&
+      imageUrls.length === 0 &&
+      videos.length === 0 &&
+      files.length === 0
+    ) {
       return;
     }
 
@@ -313,13 +331,18 @@ if(
   };
 
   return (
-    <div ref={chatWindowRef} className="flex-1 flex flex-col h-[calc(100vh-64px)] mt-16">
+    <div
+      ref={chatWindowRef}
+      className="flex-1 flex flex-col h-[calc(100vh-64px)] mt-16"
+    >
       {/* Chat Header */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className={`p-4 border-b flex items-center justify-between transition-colors duration-300 ${
-          isDarkTheme ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"
+          isDarkTheme
+            ? "bg-gray-900 border-gray-700"
+            : "bg-white border-gray-200"
         }`}
       >
         <div className="flex items-center gap-3">
@@ -329,15 +352,17 @@ if(
             alt="User avatar"
           />
           <div>
-            <h2 className={`font-medium transition-colors duration-300 ${
-              isDarkTheme ? "text-white" : "text-gray-900"
-            }`}>
+            <h2
+              className={`font-medium transition-colors duration-300 ${
+                isDarkTheme ? "text-white" : "text-gray-900"
+              }`}
+            >
               {selectedUser?.fullName}
             </h2>
             <p className="text-sm text-gray-500 transition-colors duration-300">
-              {isUserTyping?.isTyping && 
-               isUserTyping.receiverId === localStorage.getItem("userId") 
-                ? "typing..." 
+              {isUserTyping?.isTyping &&
+              isUserTyping.receiverId === localStorage.getItem("userId")
+                ? "typing..."
                 : "online"}
             </p>
           </div>
@@ -358,19 +383,19 @@ if(
           </div>
         )}
 
-      {IsfirstMessageFetch ? (
-        <MessagesSkeleton />
-      ) : (
-        messages?.map((message: Message) => (
-          <ChatMessages key={message._id} message={message} />
-        ))
-      )}
+        {IsfirstMessageFetch ? (
+          <MessagesSkeleton />
+        ) : (
+          messages?.map((message: Message) => (
+            <ChatMessages key={message._id} message={message} />
+          ))
+        )}
 
         {/* Typing indicator */}
-        {isUserTyping?.isTyping && 
-         isUserTyping.receiverId === localStorage.getItem("userId") && (
-          <TypingIndicator />
-        )}
+        {isUserTyping?.isTyping &&
+          isUserTyping.receiverId === localStorage.getItem("userId") && (
+            <TypingIndicator />
+          )}
 
         {/* Scroll anchor */}
         <div ref={endOfMessagesRef} />
@@ -392,7 +417,9 @@ if(
       <div
         {...getRootProps()}
         className={`p-4 border-t transition-colors duration-300 ${
-          isDarkTheme ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"
+          isDarkTheme
+            ? "bg-gray-900 border-gray-700"
+            : "bg-white border-gray-200"
         }`}
       >
         {/* Hidden file inputs */}
@@ -419,7 +446,6 @@ if(
           onChange={handleVideoUpload}
           accept="video/*"
         />
-
 
         <div className="flex items-center gap-2">
           <button
@@ -504,15 +530,14 @@ if(
           </div>
         )}
       </div>
-      {
-        isScrollAtBottom ? (
-          <div className="flex w-full justify-center items-center">
-          <ScrollToBottom handleScrollToBottom={()=> handleScrollToBottom()} files= {files}/>
-          </div>
-    
-        ): null
-
-      }
+      {isScrollAtBottom ? (
+        <div className="flex w-full justify-center items-center">
+          <ScrollToBottom
+            handleScrollToBottom={() => handleScrollToBottom()}
+            files={files}
+          />
+        </div>
+      ) : null}
       <VideoModal
         videoUrl={selectedVideo || ""}
         isOpen={!!selectedVideo}

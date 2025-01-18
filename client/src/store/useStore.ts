@@ -5,91 +5,93 @@ import { FriendsType, UserType } from "./useAuthStore";
 import { Socket } from "socket.io-client";
 import { Message } from "@/components/ChatWindow";
 
+interface UserChatState {
+  messages: Message[];
+  cursor: string | null;
+  hasMoreMessages: boolean;
+  isLoadingMessages: boolean;
+}
 
 interface Payload {
   receiverId: string;
   isTyping: boolean;
-  senderId : string
+  senderId: string;
 }
 
+
+
 interface ChatStoreType {
-  messages: Message[];
+  messages: any[],
   users: any[];
   selectedUser: UserType | null;
   isUsersLoading: boolean;
   isMessagesLoading: boolean;
-  isUserTyping : Payload | null
-  nextCursor : string
-  hasMore : boolean
-  hasMoreMessages : boolean
+  isUserTyping: Payload | null;
+  nextCursor: string | null;
+  nextMessageCursor: string ,
+  hasMore: boolean;
   onlineUsers: any[];
-  isMessageSending : boolean;
-  isUsersSidebarLoading : boolean
-  getMessagesNextCursor : string,
-  userSidebar : FriendsType ,
-  lastMessage : Message,
-  setLastMessage: (message : Message) => void,
-  setUserSidebar : (sidebarUsers: FriendsType )=> void
-  setUsers: (newUsers: any[]) => void
-  setIsUserTyping:  (data : Payload)=> void
+  isMessageSending: boolean;
+  isUsersSidebarLoading: boolean;
+  userChatStates: Record<string, UserChatState>;
+  userSidebar: FriendsType;
+  lastMessage: Message | null;
+
+  fetchedMessageOnce: (chatId: string) => Promise<void>;
+  setLastMessage: (message: Message) => void;
+  setUserSidebar: (sidebarUsers: FriendsType) => void;
+  setUsers: (newUsers: any[]) => void;
+  setIsUserTyping: (data: Payload) => void;
   setOnlineUsers: (userIds: any[]) => void;
-  subscribeToMessages : (socket :Socket)=> void,
-  unsubscribeFromMessages :(socket :Socket) => void
-  getUserSideBar: ()=> Promise<any>
-  getUsers: () => Promise<any>;
-  getMessages: (userId: string) => Promise<any>;
-  setSelectedUser: (selectedId: UserType) => void;
+  subscribeToMessages: (socket: Socket) => void;
+  unsubscribeFromMessages: (socket: Socket) => void;
+  getUserSideBar: () => Promise<void>;
+  getUsers: () => Promise<void>;
+  getMessages: (userId: string) => Promise<void>;
   sendMessages: (messageData: any) => Promise<any>;
+  setSelectedUser: (selectedUser: UserType) => void;
 }
 
 export const useChatStore = create<ChatStoreType>((set, get) => ({
-  messages: [],
+  messages:[],
+  nextMessageCursor :"",
   users: [],
-  hasMore: true,
-  hasMoreMessages : true,
- lastMessage :{}  as Message,
-  nextCursor : "",
-  getMessagesNextCursor : "",
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
-  isMessageSending : false,
-  isUserTyping : null,
+  isUserTyping: null,
+  nextCursor: "",
+  hasMore: true,
   onlineUsers: [],
-  isUsersSidebarLoading:false,
+  isMessageSending: false,
+  isUsersSidebarLoading: false,
+  userChatStates: {},
   userSidebar: {} as FriendsType,
+  hasMoreMessages : true,
+  lastMessage: null,
 
-  setUserSidebar: (sidebarUsers)=>{
-    set({userSidebar : sidebarUsers})
 
+  setUserSidebar: (sidebarUsers) => {
+    set({ userSidebar: sidebarUsers });
   },
-  setLastMessage: (message)=> {
-    set({lastMessage:  message})
-    
+  setLastMessage: (message) => {
+    set({ lastMessage: message });
   },
-
-  setUsers: (newUsers)=>{
-    set({users : newUsers})
+  setUsers: (newUsers) => {
+    set({ users: newUsers });
   },
-
-
   getUsers: async () => {
     if (!get().hasMore) return;
     set({ isUsersLoading: true });
     try {
-      
-      const res = await axiosClient.get(
-        `/messages/users?cursor=${get().nextCursor}`
-      );
-      console.log("respons ", res.data.allUsers.users)
+      const res = await axiosClient.get(`/messages/users?cursor=${get().nextCursor}`);
       const newUsers = res.data.allUsers.users;
       const map = new Map<string, any>();
-      [...get().users, ...newUsers].forEach(user => map.set(user._id, user));
-      const users = Array.from(map.values());
+      [...get().users, ...newUsers].forEach((user) => map.set(user._id, user));
       set({
-        users,
-        nextCursor: res.data.allUsers.nextCursor,
-        hasMore: !!res.data.allUsers.nextCursor, 
+        users: Array.from(map.values()),
+        nextCursor: res.data.allUsers.nextCursor || null,
+        hasMore: !!res.data.allUsers.nextCursor,
       });
     } catch (error: any) {
       console.error(error);
@@ -98,93 +100,191 @@ export const useChatStore = create<ChatStoreType>((set, get) => ({
       set({ isUsersLoading: false });
     }
   },
-
-  getUserSideBar :async()=> {
-    set({isUsersSidebarLoading: true})
+  getUserSideBar: async () => {
+    set({ isUsersSidebarLoading: true });
     try {
-      const res = await axiosClient.get('/messages/sidebar_users')
-      
-      set({userSidebar : res.data.user})
-
+      const res = await axiosClient.get("/messages/sidebar_users");
+      set({ userSidebar: res.data.user });
     } catch (error) {
-      console.log(error)
-    }finally{
-      set({isUsersSidebarLoading: false})
-    }
-    
-  },
-
-
-  getMessages: async (userId: string) => {
-    set({ isMessagesLoading: true });
-    try {
-      const res = await axiosClient.get(`/messages/${userId}?cursor=${get().getMessagesNextCursor}`);
-      console.log("HAS MORE",res.data.hasMore)
-      set({ messages: [...res.data.messages ,...get().messages] });
-      set({getMessagesNextCursor : res.data.cursor})
-      set({hasMoreMessages : res.data.hasMore})
-      return res
-    } catch (error: any) {
-      toast.error(error.response.data.message);
+      console.error(error);
     } finally {
-      set({ isMessagesLoading: false });
+      set({ isUsersSidebarLoading: false });
     }
   },
-  setSelectedUser: (selectedUser) => set({ selectedUser: selectedUser }),
-  sendMessages: async (messageData: any) => {
+  getMessages: async (userId: string) => {
+    const userState = get().userChatStates[userId] || {
+      messages: [],
+      cursor: null,
+      hasMoreMessages: true,
+      isLoadingMessages: false,
+    };
+
+    if (!userState.hasMoreMessages || userState.isLoadingMessages) return;
+
+    set((state) => ({
+      userChatStates: {
+        ...state.userChatStates,
+        [userId]: { ...userState, isLoadingMessages: true },
+      },
+    }));
+
+    try {
+      const res = await axiosClient.get(`/messages/${userId}?cursor=${userState.cursor || ""}`);
+      const fetchedMessages = res.data.messages;
+      const newCursor = res.data.cursor;
+
+      set((state) => ({
+        userChatStates: {
+          ...state.userChatStates,
+          [userId]: {
+            messages: [...fetchedMessages, ...userState.messages],
+            cursor: newCursor,
+            hasMoreMessages: !!newCursor,
+            isLoadingMessages: false,
+          },
+        },
+      }));
+      console.log("user chat states in Get Messages function",get().userChatStates[userId])
+    } catch (error: any) {
+      console.error(error);
+      toast.error("Failed to fetch messages.");
+      set((state) => ({
+        userChatStates: {
+          ...state.userChatStates,
+          [userId]: { ...userState, isLoadingMessages: false },
+        },
+      }));
+    }
+  },
+  fetchedMessageOnce: async (userId) => {
+    try {
+      const res = await axiosClient.get(`/messages/${userId}`);
+      return res.data;
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  // setSelectedUser: (selectedUser) => {
+  //   // Reset message state when switching users
+  //   set((state) => ({
+  //     selectedUser,
+  //     userChatStates: {
+  //     ...state.userChatStates,
+  //     [selectedUser._id]: {
+  //       messages: [],
+  //       cursor: null,
+  //       hasMoreMessages: true,
+  //       isLoadingMessages: false,
+  //     },
+  //     },
+  //   }));
+  //   },
+  setSelectedUser: (selectedUser) => {
+    set((state) => {
+      // Only initialize the chat state if it doesn't exist
+      const existingChatState = state.userChatStates[selectedUser._id];
+      
+      return {
+        selectedUser,
+        userChatStates: {
+          ...state.userChatStates,
+          [selectedUser._id]: existingChatState || {
+            messages: [],
+            cursor: null,
+            hasMoreMessages: true,
+            isLoadingMessages: false,
+          },
+        },
+      };
+    });
+  },
+
+    sendMessages: async (messageData: any) => {
     set({isMessageSending: true})
     let toast_id;
-    console.log("message data",messageData)
+    
     for(let [_ , value] of messageData.entries()){
       if(get().isMessageSending && (value instanceof File || value instanceof FileList)) { 
-        toast_id = toast.loading("Sending Message")
-        break;
-
+      toast_id = toast.loading("Sending Message")
+      break;
       }
-
     }
-    const { messages, selectedUser } = get();
+    
+    const { selectedUser, userChatStates } = get();
+    if (!selectedUser?._id) return;
+    
     try {
       const res = await axiosClient.post(
-        `/messages/send/${selectedUser?._id}`,
-        messageData
+      `/messages/send/${selectedUser._id}`,
+      messageData
       );
-      set({ messages: [...messages, res.data.data] });
-      console.log( "messages" , messages)
-      if(res.status===200){
-        set({isMessageSending:false})
-        for(let [_ , value] of messageData.entries()){
-          if(value instanceof File || value instanceof FileList){
+      
+      const currentUserState = userChatStates[selectedUser._id] || {
+      messages: [],
+      cursor: null,
+      hasMoreMessages: true,
+      isLoadingMessages: false,
+      };
+      
+      set((state) => ({
+      userChatStates: {
+        ...state.userChatStates,
+        [selectedUser._id]: {
+        ...currentUserState,
+        messages: [...currentUserState.messages, res.data.data],
+        },
+      },
+      isMessageSending: false
+      }));
 
-            toast.success("Message Sent")
-            toast.dismiss(toast_id)
-            break;
-          }
+      if(res.status === 200){
+      for(let [_ , value] of messageData.entries()){
+        if(value instanceof File || value instanceof FileList){
+        toast.success("Message Sent");
+        toast.dismiss(toast_id);
+        break;
         }
+      }
       }
       return res;
     } catch (error: any) {
       console.log(error);
       toast.error(error.response.data.message);
+      set({ isMessageSending: false });
     }
+    },
+    setOnlineUsers: (userIds) => {
+    set({ onlineUsers: userIds });
   },
-  setOnlineUsers: (userIds) => set({ onlineUsers: userIds }),
   subscribeToMessages: (socket) => {
     const { selectedUser } = get();
-    if (!selectedUser) return;
-    socket?.on("newMessage", (newMessage) => {
-      console.log("new message" , newMessage)
-      set({
-        messages: [...get().messages, newMessage],
+    if (!selectedUser?._id) return;
+
+    socket.on("newMessage", (newMessage) => {
+      set((state) => {
+        const currentUserState = state.userChatStates[selectedUser._id];
+                if (!currentUserState) {
+          return state;
+        }
+
+        return {
+          userChatStates: {
+            ...state.userChatStates,
+            [selectedUser._id]: {
+              ...currentUserState,
+              messages: [...currentUserState.messages, newMessage],
+            },
+          },
+        };
       });
     });
   },
-
-  unsubscribeFromMessages : (socket)=>{
-    socket?.off("newMessage")
+  
+  unsubscribeFromMessages: (socket) => {
+    socket.off("newMessage");
   },
-
-  setIsUserTyping  : (value : Payload)=>{
-    set({isUserTyping : value})
-  }
-})); 
+  setIsUserTyping: (value) => {
+    set({ isUserTyping: value });
+  },
+  
+}));

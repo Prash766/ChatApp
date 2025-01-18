@@ -3,20 +3,24 @@ import { useChatStore } from "@/store/useStore";
 import { motion } from "framer-motion";
 import { Image } from "lucide-react";
 import { useEffect, useState } from "react";
-
+import { Message } from "./ChatWindow";
 const UserCard = ({ chat }: any) => {
+
   const { isDarkTheme } = useTheme();
-  const { setSelectedUser, selectedUser, getMessages, messages } = useChatStore();
+  const { setSelectedUser, selectedUser, fetchedMessageOnce } = useChatStore();
   const isSelected = selectedUser?._id === chat._id;
   const { onlineUsers, isUserTyping } = useChatStore();
+  const [messages , setMessages] = useState<Array<Message>>([])
   const [isFetched, setIsFetched] = useState<boolean>(false);
 
   useEffect(() => {
     console.log("is user typing", isUserTyping);
     async function fetchMessageSpecificToUser() {
-      await getMessages(chat._id);
+     const res: any = await fetchedMessageOnce(chat._id);
       console.log("messages", messages);
-      setIsFetched(true);
+      setMessages(res.messages)
+      console.log("inside the user card getmessages" , messages)
+      setIsFetched(true)
     }
     fetchMessageSpecificToUser();
   }, []);

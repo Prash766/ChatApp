@@ -17,12 +17,15 @@ export interface PendingFriend {
 }
 
 
+
 interface FriendStoreType{
     friendRequestReceiver: string,
     notificationCount : number,
+    friendRequestSentList: Set<string>,
     pendingFriendList : PendingFriend[]
     setFriendRequestReceiver : (receiverId: string)=> void
     setPendingList : (list : PendingFriend[])=> void
+    setFriendRequestSentList : (obj : string)=> void 
     getPendingFriendList : ()=> Promise<void>
     setNotificationCount : (notificationCount : number) => void
     sendFriendRequest : ()=> Promise<AxiosResponse >
@@ -35,10 +38,18 @@ const useFriendStore= create<FriendStoreType>((set , get)=> ({
 
     friendRequestReceiver : "",
     notificationCount : 0,
+    friendRequestSentList : new Set(),
     pendingFriendList: [],
     setNotificationCount : (notificationCount : number)=>{
         set({notificationCount : notificationCount})
     },
+
+
+    setFriendRequestSentList: (obj)=> {
+        const {friendRequestSentList} = get()
+        friendRequestSentList.add(obj)
+        },
+      
 
     setPendingList : (list)=>{
         set({pendingFriendList : list})

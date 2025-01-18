@@ -3,7 +3,6 @@ import { UserPlus, Check, Clock } from "lucide-react";
 import { User } from "./UserListModal";
 import useFriendStore from "@/store/useFriendStore";
 import { toast } from "sonner";
-import { useState } from "react";
 
 interface UserCardProps {
   user: User;
@@ -14,10 +13,11 @@ export const UserCardModal = ({
   user,
   isDarkTheme,
 }: UserCardProps) => {
-  const { sendFriendRequest, setFriendRequestReceiver } = useFriendStore();
-  const [isRequestSent, setIsRequestSent] = useState(false);
+  const { sendFriendRequest, setFriendRequestReceiver , friendRequestSentList , setFriendRequestSentList } = useFriendStore();
+  const hasRequestSent = friendRequestSentList.has(user._id)
 
   async function handleFriendRequest() {
+    if(hasRequestSent) return
     try {
       setFriendRequestReceiver(user._id);
       const res = await sendFriendRequest();
@@ -26,7 +26,7 @@ export const UserCardModal = ({
           duration: 3000,
           className: isDarkTheme ? "dark-toast" : "",
         });
-        setIsRequestSent(true);
+        setFriendRequestSentList(user._id)
       }
     } catch (error) {
       console.log(error);
@@ -95,11 +95,11 @@ export const UserCardModal = ({
             Cooldown: {remainingCooldownTime} day(s)
           </span>
         </div>
-      ) : isRequestSent ? (
+      ) : pendingRequest||hasRequestSent ? (
         <div className="p-2.5 rounded-xl bg-green-500 text-white transform hover:scale-105 transition-all duration-300">
           <Check size={20} />
         </div>
-      ) : (
+      ) : ( 
         <button
           onClick={handleFriendRequest}
           className="p-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition-all duration-300 transform hover:scale-105"
