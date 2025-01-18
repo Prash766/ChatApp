@@ -12,6 +12,7 @@ const errorMiddleware= (err:Error | ApiError ,req :Request, res:Response ,next:N
     console.log(err)
 
      res.status(status).json({
+        error : err,
         message:message || "Internal Server Error"
     })
     

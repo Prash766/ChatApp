@@ -250,6 +250,7 @@ export const useChatStore = create<ChatStoreType>((set, get) => ({
     } catch (error: any) {
       console.log(error);
       toast.error(error.response.data.message);
+      toast.dismiss(toast_id)
       set({ isMessageSending: false });
     }
     },
