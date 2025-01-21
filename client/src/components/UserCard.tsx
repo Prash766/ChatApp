@@ -1,13 +1,13 @@
 import { useTheme } from "@/contexts/ThemeContext";
 import { useChatStore } from "@/store/useStore";
 import { motion } from "framer-motion";
-import { Image } from "lucide-react";
+import { Image, User2Icon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Message } from "./ChatWindow";
 const UserCard = ({ chat }: any) => {
 
   const { isDarkTheme } = useTheme();
-  const { setSelectedUser, selectedUser, fetchedMessageOnce } = useChatStore();
+  const { setSelectedUser, selectedUser, fetchedMessageOnce  } = useChatStore();
   const isSelected = selectedUser?._id === chat._id;
   const { onlineUsers, isUserTyping } = useChatStore();
   const [messages , setMessages] = useState<Array<Message>>([])
@@ -24,8 +24,8 @@ const UserCard = ({ chat }: any) => {
     }
     fetchMessageSpecificToUser();
   }, []);
+  let lastMessage = messages[messages.length - 1] 
 
-  const lastMessage = messages[messages.length - 1];
 
   return (
     <motion.div
@@ -43,11 +43,12 @@ const UserCard = ({ chat }: any) => {
     >
       <div className="flex items-center gap-3">
         <div className="relative">
-          <img
+          {chat.profilePic.length !==0 ? <img
             src={chat.profilePic}
             className="w-12 h-12 rounded-full object-cover"
             alt={`${chat.fullName}'s avatar`}
-          />
+          /> : <User2Icon size={38}/>
+        }
           {onlineUsers.includes(chat._id) ? (
             <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></span>
           ) : (
